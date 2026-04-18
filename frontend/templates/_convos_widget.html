@@ -1,0 +1,84 @@
+<div class="fixed bottom-6 right-6 z-40">
+  <div id="convos-panel" class="mb-3 hidden w-[22rem] max-w-[calc(100vw-2rem)] rounded-3xl border border-ink/10 bg-white/95 p-4 shadow-float backdrop-blur">
+    <div class="mb-3 flex items-center justify-between">
+      <div>
+        <p class="font-display text-[11px] uppercase tracking-[0.14em] text-tide">Social</p>
+        <h4 class="font-display text-lg font-bold text-ink">Convos</h4>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="convos-new" type="button" class="rounded-lg border border-deep/25 bg-deep/10 px-2.5 py-1 text-xs font-semibold text-deep hover:bg-deep/20">New</button>
+        <button id="convos-close" type="button" class="rounded-lg border border-ink/15 px-2 py-1 text-xs font-semibold text-ink/60 hover:bg-ink/5">Close</button>
+      </div>
+    </div>
+
+    <div id="convos-new-wrap" class="mb-3 hidden rounded-2xl border border-ink/10 bg-frost/70 p-3">
+      <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink/45">Start new conversation</p>
+      {% if social_sidebar.friend_summary.friends %}
+      <form method="post" action="{{ url_for('send_friend_message') }}" class="mt-2.5 space-y-2">
+        <select name="friend_id" class="w-full rounded-xl border border-ink/20 bg-white px-3 py-2 text-xs text-ink outline-none transition focus:border-tide focus:ring-4 focus:ring-tide/20" required>
+          {% for friend in social_sidebar.friend_summary.friends %}
+          <option value="{{ friend.id }}">{{ friend.label }} ({{ friend.email }})</option>
+          {% endfor %}
+        </select>
+        <input
+          id="convos-new-input"
+          type="text"
+          name="body"
+          maxlength="500"
+          placeholder="Write a first message..."
+          class="w-full rounded-xl border border-ink/20 bg-white px-3 py-2 text-xs text-ink outline-none transition focus:border-tide focus:ring-4 focus:ring-tide/20"
+          required
+        />
+        <div class="flex justify-end">
+          <button type="submit" class="rounded-xl bg-deep px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white">Send</button>
+        </div>
+      </form>
+      {% else %}
+      <p class="mt-2 text-xs text-ink/55">Add at least one friend to start a conversation.</p>
+      {% endif %}
+    </div>
+
+    <div class="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
+      {% if social_sidebar.chat_threads %}
+        {% for thread in social_sidebar.chat_threads %}
+        <div class="rounded-2xl border border-ink/10 bg-frost/75 p-3">
+          <p class="text-sm font-semibold text-ink">{{ thread.friend_label }}</p>
+          <p class="mt-0.5 text-[11px] text-ink/55">{{ thread.friend_email }}</p>
+          <div class="mt-2 space-y-2">
+            {% if thread.recent_messages %}
+              {% for message in thread.recent_messages %}
+              <div class="rounded-xl bg-white px-2.5 py-2 text-[11px] text-ink/70">
+                <span class="font-semibold text-ink">{{ message.direction }}:</span>
+                {{ message.body }}
+              </div>
+              {% endfor %}
+            {% else %}
+            <p class="text-[11px] text-ink/50">No messages yet. Start the conversation.</p>
+            {% endif %}
+          </div>
+          <form method="post" action="{{ url_for('send_friend_message') }}" class="mt-2.5">
+            <input type="hidden" name="friend_id" value="{{ thread.friend_id }}" />
+            <input
+              type="text"
+              name="body"
+              maxlength="500"
+              placeholder="Write a message..."
+              class="w-full rounded-xl border border-ink/20 bg-white px-3 py-2 text-xs text-ink outline-none transition focus:border-tide focus:ring-4 focus:ring-tide/20"
+              required
+            />
+            <div class="mt-2 flex justify-end">
+              <button type="submit" class="rounded-xl bg-deep px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white">Send</button>
+            </div>
+          </form>
+        </div>
+        {% endfor %}
+      {% else %}
+      <p class="text-sm text-ink/50">Accept a friend request to start chatting.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <button id="convos-toggle" type="button" class="rounded-full bg-gradient-to-r from-deep to-tide px-5 py-3 text-xs font-extrabold uppercase tracking-[0.14em] text-white shadow-xl shadow-tide/40 hover:from-[#1859a5] hover:to-deep">
+    Convos
+  </button>
+</div>

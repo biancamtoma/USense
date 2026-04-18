@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block body %}
+<main class="mx-auto w-full max-w-6xl px-4 py-8 md:px-6 md:py-10">
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="mb-5 space-y-3">
+        {% for category, message in messages %}
+        <div class="rise rounded-xl border px-5 py-3 text-sm font-medium {% if category == 'success' %}border-green-200 bg-green-50 text-green-700{% else %}border-red-200 bg-red-50 text-red-700{% endif %}">
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Top bar: greeting + actions -->
+  <div class="rise mb-8 flex flex-col items-start justify-between gap-4 rounded-3xl border border-tide/20 bg-white/80 px-7 py-6 shadow-float backdrop-blur sm:flex-row sm:items-center">
+    <div>
+      <p class="font-display text-xs uppercase tracking-[0.26em] text-tide">Welcome back</p>
+      <h2 class="mt-1 font-display text-3xl font-bold tracking-tight text-ink md:text-4xl">{{ display_name }}</h2>
+      <p class="mt-0.5 text-xs text-ink/50">{{ email }}</p>
+    </div>
+    <div class="flex shrink-0 items-center gap-3">
+      <a href="{{ url_for('profile') }}" class="flex items-center gap-1.5 rounded-xl border border-tide/30 bg-tide/10 px-5 py-2.5 text-sm font-bold uppercase tracking-[0.12em] text-deep shadow-sm transition hover:bg-tide/20">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Profile
+      </a>
+      <a href="{{ url_for('favorites') }}" class="flex items-center gap-1.5 rounded-xl border border-tide/30 bg-tide/10 px-5 py-2.5 text-sm font-bold uppercase tracking-[0.12em] text-deep shadow-sm transition hover:bg-tide/20">
+        <svg viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4"><path d="M12 21l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.18L12 21z"/></svg>
+        Favorites
+      </a>
+      <a href="{{ url_for('logout') }}" class="rounded-xl bg-sun px-6 py-2.5 text-sm font-bold uppercase tracking-[0.12em] text-ink shadow-md shadow-amber/30 transition hover:translate-y-[-1px] hover:bg-amber">Logout</a>
+    </div>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-[1.55fr_0.95fr] lg:items-start">
+    {% include "_feed_section.html" %}
+    {% include "_social_sidebar.html" %}
+  </div>
+
+  {% include "_community_section.html" %}
+
+</main>
+{% include "_convos_widget.html" %}
+<script>
+  (function () {
+    document.querySelectorAll('[data-animation-delay]').forEach((element) => {
+      element.style.animationDelay = `${element.dataset.animationDelay}ms`;
+    });
+
+    document.querySelectorAll('[data-surface-color]').forEach((element) => {
+      element.style.backgroundColor = element.dataset.surfaceColor;
+    });
+
+    document.querySelectorAll('[data-tag-color]').forEach((element) => {
+      const color = element.dataset.tagColor;
+      element.style.borderColor = `${color}40`;
+      element.style.color = color;
+      element.style.backgroundColor = `${color}15`;
+    });
+
+    document.querySelectorAll('[data-fill-width]').forEach((element) => {
+      element.style.width = `${element.dataset.fillWidth}%`;
+    });
+
+    document.querySelectorAll('[data-card-tint]').forEach((element) => {
+      element.style.backgroundColor = `${element.dataset.cardTint}12`;
+    });
+
+    const convosToggle = document.getElementById('convos-toggle');
+    const convosPanel = document.getElementById('convos-panel');
+    const convosClose = document.getElementById('convos-close');
+    const convosNewButton = document.getElementById('convos-new');
+    const convosNewWrap = document.getElementById('convos-new-wrap');
+    const convosNewInput = document.getElementById('convos-new-input');
+
+    function setNewConversationOpen(isOpen) {
+      if (!convosNewWrap) return;
+      convosNewWrap.classList.toggle('hidden', !isOpen);
+      if (isOpen && convosNewInput) {
+        requestAnimationFrame(() => convosNewInput.focus());
+      }
+    }
+
+    function setConvosOpen(isOpen) {
+      if (!convosPanel) return;
+      convosPanel.classList.toggle('hidden', !isOpen);
+      if (isOpen) {
+        setNewConversationOpen(true);
+      }
+    }
+
+    if (convosToggle && convosPanel) {
+      convosToggle.addEventListener('click', () => {
+        const isHidden = convosPanel.classList.contains('hidden');
+        setConvosOpen(isHidden);
+      });
+    }
+
+    if (convosClose) {
+      convosClose.addEventListener('click', () => setConvosOpen(false));
+    }
+
+    if (convosNewButton && convosNewWrap) {
+      convosNewButton.addEventListener('click', () => {
+        const currentlyHidden = convosNewWrap.classList.contains('hidden');
+        setNewConversationOpen(currentlyHidden);
+      });
+    }
+  })();
+</script>
+{% endblock %}
