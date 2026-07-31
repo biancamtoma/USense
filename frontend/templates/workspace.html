@@ -1,0 +1,168 @@
+{% extends "base.html" %} {% block body %}
+<main class="mx-auto w-full max-w-6xl px-4 py-8 md:px-6 md:py-10">
+  <div
+    class="rise relative z-30 mb-8 flex flex-col items-start justify-between gap-4 rounded-3xl border border-tide/20 bg-white/80 px-7 py-6 shadow-float backdrop-blur sm:flex-row sm:items-center"
+  >
+    <div>
+      <p class="font-display text-xs uppercase tracking-[0.26em] text-tide">
+        Workspace
+      </p>
+      <h2
+        class="mt-1 font-display text-3xl font-bold tracking-tight text-ink md:text-4xl"
+      >
+        Shared Campaign Room
+      </h2>
+      <p class="mt-0.5 text-xs text-ink/50">
+        Discussion, approvals, and collaborative shortlist management.
+      </p>
+    </div>
+    <div class="flex items-center gap-3 shrink-0">
+      <a
+        href="{{ url_for('dashboard') }}"
+        class="rounded-xl border border-tide/30 bg-white px-6 py-2.5 text-sm font-bold uppercase tracking-[0.12em] text-deep shadow-sm transition hover:bg-tide/10"
+        >Back</a
+      >
+    </div>
+  </div>
+
+  <div class="grid gap-6 md:grid-cols-3">
+    <section
+      class="rounded-3xl border border-ink/10 bg-white/90 p-6 shadow-xl backdrop-blur"
+    >
+      <p class="font-display text-xs uppercase tracking-[0.26em] text-tide">
+        Collaborators
+      </p>
+      <h3 class="mt-1 font-display text-xl font-bold tracking-tight text-ink">
+        Active collaborators
+      </h3>
+      <p class="mt-3 text-sm text-ink/60">
+        Manage team members and invitations for this campaign.
+      </p>
+
+      <div class="mt-5 space-y-4">
+        <div class="p-6 bg-white rounded-2xl border border-ink/5">
+          <p class="text-xs font-semibold uppercase tracking-wider text-ink/40">
+            Collaborators
+          </p>
+          <p class="mt-2 font-display text-2xl font-bold text-ink">
+            {{ social_sidebar.collaborator_summary.collaborators|length }}
+          </p>
+        </div>
+        <div class="p-6 bg-white rounded-2xl border border-ink/5">
+          <p class="text-xs font-semibold uppercase tracking-wider text-ink/40">
+            Incoming Invitations
+          </p>
+          <p class="mt-2 font-display text-2xl font-bold text-ink">
+            {{ social_sidebar.collaborator_summary.incoming_requests|length }}
+          </p>
+        </div>
+        <div class="p-6 bg-white rounded-2xl border border-ink/5">
+          <p class="text-xs font-semibold uppercase tracking-wider text-ink/40">
+            Outgoing Invitations
+          </p>
+          <p class="mt-2 font-display text-2xl font-bold text-ink">
+            {{ social_sidebar.collaborator_summary.outgoing_requests|length }}
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section
+      class="md:col-span-2 rounded-3xl border border-ink/10 bg-white/90 p-6 shadow-xl backdrop-blur"
+    >
+      <p class="font-display text-xs uppercase tracking-[0.26em] text-tide">
+        Approvals & Suggestions
+      </p>
+      <h3 class="mt-1 font-display text-xl font-bold tracking-tight text-ink">
+        Team requests & recommended collaborators
+      </h3>
+
+      <div class="mt-4 grid gap-4 lg:grid-cols-2">
+        <div>
+          <p
+            class="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/45"
+          >
+            Incoming requests
+          </p>
+          <div class="space-y-4">
+            {% if social_sidebar.collaborator_summary.incoming_requests %} {%
+            for item in social_sidebar.collaborator_summary.incoming_requests %}
+            <div
+              class="flex items-center justify-between p-4 bg-ink/5 rounded-xl"
+            >
+              <div>
+                <p class="font-semibold text-ink">{{ item.label }}</p>
+                <p class="text-xs text-ink/50">{{ item.email }}</p>
+              </div>
+              <div class="flex gap-2">
+                <form
+                  method="post"
+                  action="{{ url_for('accept_collaborator_request', request_id=item.id) }}"
+                >
+                  <button
+                    type="submit"
+                    class="px-3 py-1.5 bg-tide text-white text-xs font-bold rounded-lg hover:bg-deep transition-colors"
+                  >
+                    Accept
+                  </button>
+                </form>
+                <form
+                  method="post"
+                  action="{{ url_for('decline_collaborator_request', request_id=item.id) }}"
+                >
+                  <button
+                    type="submit"
+                    class="px-3 py-1.5 bg-ink/5 text-ink/70 text-xs font-bold rounded-lg hover:bg-ink/10 transition-colors"
+                  >
+                    Decline
+                  </button>
+                </form>
+              </div>
+            </div>
+            {% endfor %} {% else %}
+            <p class="text-sm text-ink/40 text-center py-4 italic">
+              No pending invitations.
+            </p>
+            {% endif %}
+          </div>
+        </div>
+
+        <div>
+          <p
+            class="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink/45"
+          >
+            Recommended collaborators
+          </p>
+          <div class="mt-2 space-y-3">
+            {% if social_sidebar.suggested_people %} {% for person in
+            social_sidebar.suggested_people %}
+            <div class="rounded-2xl border border-ink/10 bg-frost/75 p-4">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="text-sm font-semibold text-ink">
+                    {{ person.label }}
+                  </p>
+                  <p class="mt-1 text-xs text-ink/55">{{ person.email }}</p>
+                </div>
+                <span
+                  class="rounded-full bg-tide/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-tide"
+                  >{{ person.taste_match }}% match</span
+                >
+              </div>
+              <p class="mt-2 text-xs text-ink/65">{{ person.mutual_tastes }}</p>
+              <p
+                class="mt-2 text-[11px] uppercase tracking-[0.12em] text-ink/45"
+              >
+                {{ person.common_collaborator_count }} shared team members
+              </p>
+            </div>
+            {% endfor %} {% else %}
+            <p class="text-sm text-ink/50">No collaborator suggestions yet.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+{% include "_convos_widget.html" %} {% endblock %}

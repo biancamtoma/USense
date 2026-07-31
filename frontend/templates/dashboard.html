@@ -1,49 +1,1763 @@
-{% extends "base.html" %}
-
-{% block body %}
+{% extends "base.html" %} {% block body %}
 <main class="mx-auto w-full max-w-6xl px-4 py-8 md:px-6 md:py-10">
+  {% if is_sandbox %}
+  <!-- Limited Trial Banner -->
+  <div
+    class="rise mb-6 flex flex-col items-center justify-between gap-4 rounded-3xl border border-amber-200 bg-amber-50/95 px-6 py-4 shadow-md backdrop-blur sm:flex-row"
+  >
+    <div class="flex items-center gap-3">
+      <span class="text-2xl">&#9888;&#65039;</span>
+      <div>
+        <p class="text-sm font-bold text-amber-900">
+          Limited Trial Sandbox Mode
+        </p>
+        <p class="text-xs text-amber-700/80">
+          You are logged into a read-only trial workspace. Certain actions (like
+          creating new rooms, or custom media uploads) are
+          restricted. Log in now and use more features for free!
+        </p>
+      </div>
+    </div>
+    <button
+      type="button"
+      onclick="showUpgradeModal()"
+      class="shrink-0 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs uppercase tracking-wider px-5 py-2.5 shadow-sm transition"
+    >
+      &#128273; Log In Free
+    </button>
+  </div>
+  {% endif %} {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="mb-5 space-y-3">
+    {% for category, message in messages %}
+    <div
+      class="rise rounded-xl border px-5 py-3 text-sm font-medium {% if category == 'success' %}border-green-200 bg-green-50 text-green-700{% else %}border-red-200 bg-red-50 text-red-700{% endif %}"
+    >
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %} {% endwith %}
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="mb-5 space-y-3">
-        {% for category, message in messages %}
-        <div class="rise rounded-xl border px-5 py-3 text-sm font-medium {% if category == 'success' %}border-green-200 bg-green-50 text-green-700{% else %}border-red-200 bg-red-50 text-red-700{% endif %}">
-          {{ message }}
+  <!-- Top bar: Campaign hub + actions -->
+  <div
+    class="rise relative z-30 mb-8 flex flex-col items-start justify-between gap-4 rounded-3xl border border-tide/20 bg-white/80 px-7 py-6 shadow-float backdrop-blur sm:flex-row sm:items-center"
+  >
+    <div>
+      <p class="font-display text-xs uppercase tracking-[0.26em] text-tide">
+        Campaign Hub
+      </p>
+      <h2
+        class="mt-1 font-display text-3xl font-bold tracking-tight text-ink md:text-4xl"
+      >
+        {{ display_name }}
+      </h2>
+      <p class="mt-0.5 text-xs text-ink/50">{{ email }}</p>
+    </div>
+    <div class="flex items-center gap-3 shrink-0">
+      <div class="relative">
+        <button
+          id="workspace-trigger"
+          type="button"
+          class="flex items-center gap-2 rounded-xl border border-tide/30 bg-white px-5 py-2.5 text-sm font-bold uppercase tracking-[0.12em] text-deep shadow-sm transition hover:bg-tide/10"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            class="h-4 w-4"
+          >
+            <path d="M4 7h16M4 12h10M4 17h16" />
+            <path d="M14 12l2-2 4 4" />
+          </svg>
+          Workspace
+        </button>
+        <div
+          id="workspace-dropdown-panel"
+          class="absolute right-0 top-[calc(100%+0.75rem)] z-50 hidden w-96 overflow-hidden rounded-3xl border border-ink/10 bg-white/95 shadow-2xl shadow-ink/10 backdrop-blur"
+        >
+          <div
+            class="border-b border-ink/10 px-5 py-4 flex items-center justify-between"
+          >
+            <div>
+              <p
+                class="font-display text-xs uppercase tracking-[0.24em] text-tide"
+              >
+                Collaborative Workspace
+              </p>
+              <p class="mt-1 text-xs text-ink/55">
+                Active rooms & completed campaigns
+              </p>
+            </div>
+            <a
+              href="{{ url_for('workspace') }}"
+              class="text-[10px] font-bold text-deep hover:text-tide uppercase tracking-wider border border-ink/10 bg-tide/5 px-2.5 py-1 rounded-xl transition"
+              >View All</a
+            >
+          </div>
+
+          <!-- Active Rooms Section -->
+          <div class="max-h-60 overflow-y-auto px-4 py-3">
+            <p
+              class="text-[10px] font-extrabold uppercase tracking-wider text-ink/40 mb-2 px-1"
+            >
+              Active Rooms
+            </p>
+            {% if campaign_rooms %}
+            <div class="space-y-1.5">
+              {% for cr in campaign_rooms %}
+              <div class="relative group/room">
+                <a
+                  href="{{ url_for('campaign_room', room_id=cr.id) }}"
+                  class="flex items-center gap-3 rounded-2xl border border-ink/5 bg-ink/[0.01] px-3 py-2.5 transition hover:bg-tide/5 hover:-translate-y-px"
+                >
+                  <span
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg"
+                    data-history-chip="true"
+                    data-mood-color="{{ mood_presets[cr.mood_key].color if cr.mood_key in mood_presets else '#64748b' }}"
+                    >{{ mood_presets[cr.mood_key].emoji if cr.mood_key in
+                    mood_presets else '🎵' }}</span
+                  >
+                  <div class="flex-1 min-w-0">
+                    <p
+                      class="text-xs font-bold text-ink truncate room-name-{{ cr.id }}"
+                    >
+                      {{ cr.name }}
+                    </p>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                      <p class="text-[9px] text-ink/40">
+                        {{ cr.created_at | eest }}
+                      </p>
+                      <span class="w-1 h-1 rounded-full bg-ink/10"></span>
+                      <p class="text-[9px] font-semibold text-tide truncate">
+                        {% for member in cr.members %} {{
+                        member.username.split('@')[0] }}{% if not loop.last %},
+                        {% endif %} {% endfor %}
+                      </p>
+                    </div>
+                  </div>
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    class="h-3.5 w-3.5 text-ink/20 shrink-0"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </a>
+                {% if cr.created_by == user_id %}
+                <div
+                  class="absolute top-1/2 -translate-y-1/2 right-7 flex gap-1 opacity-0 group-hover/room:opacity-100 transition-all duration-200"
+                >
+                  <button
+                    type="button"
+                    class="toggle-ongoing-btn p-1 rounded-full bg-white border border-ink/10 text-ink/40 hover:text-emerald-600 hover:border-emerald-200 shadow-sm transition"
+                    data-room-id="{{ cr.id }}"
+                    title="Complete Campaign"
+                  >
+                    <svg
+                      class="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M4.5 12.75l6 6 9-13.5"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    class="dashboard-rename-btn p-1 rounded-full bg-white border border-ink/10 text-ink/30 hover:text-tide shadow-sm transition"
+                    data-room-id="{{ cr.id }}"
+                    data-room-name="{{ cr.name }}"
+                    title="Rename Room"
+                  >
+                    <svg
+                      class="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-xs text-ink/40 py-4 italic text-center">
+              No active rooms found
+            </p>
+            {% endif %}
+          </div>
+
+          <!-- Completed Rooms Section -->
+          <div
+            class="border-t border-ink/5 max-h-60 overflow-y-auto px-4 py-3 bg-ink/[0.01]"
+          >
+            <p
+              class="text-[10px] font-extrabold uppercase tracking-wider text-ink/40 mb-2 px-1"
+            >
+              Completed Campaigns
+            </p>
+            {% if completed_campaign_rooms %}
+            <div class="space-y-1.5">
+              {% for cr in completed_campaign_rooms %}
+              <div class="relative group/room">
+                <a
+                  href="{{ url_for('campaign_room', room_id=cr.id) }}"
+                  class="flex items-center gap-3 rounded-2xl border border-ink/5 bg-white px-3 py-2.5 opacity-70 hover:opacity-100 transition hover:bg-tide/5 hover:-translate-y-px"
+                >
+                  <span
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-lg bg-ink/5"
+                    data-mood-color="{{ mood_presets[cr.mood_key].color if cr.mood_key in mood_presets else '#64748b' }}"
+                    >{{ mood_presets[cr.mood_key].emoji if cr.mood_key in
+                    mood_presets else '🎵' }}</span
+                  >
+                  <div class="flex-1 min-w-0">
+                    <p
+                      class="text-xs font-bold text-ink truncate room-name-{{ cr.id }}"
+                    >
+                      {{ cr.name }}
+                    </p>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                      <p class="text-[9px] text-ink/40">Completed</p>
+                      <span class="w-1 h-1 rounded-full bg-ink/10"></span>
+                      <p class="text-[9px] text-ink/40">
+                        {{ cr.created_at | eest }}
+                      </p>
+                    </div>
+                  </div>
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    class="h-3.5 w-3.5 text-ink/20 shrink-0"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                </a>
+                {% if cr.created_by == user_id %}
+                <div
+                  class="absolute top-1/2 -translate-y-1/2 right-7 flex gap-1 opacity-0 group-hover/room:opacity-100 transition-all duration-200"
+                >
+                  <button
+                    type="button"
+                    class="toggle-ongoing-btn p-1 rounded-full bg-white border border-ink/10 text-ink/40 hover:text-deep hover:border-deep/30 shadow-sm transition"
+                    data-room-id="{{ cr.id }}"
+                    title="Re-open Campaign"
+                  >
+                    <svg
+                      class="w-3.5 h-3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-xs text-ink/40 py-4 italic text-center">
+              No completed campaigns
+            </p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        id="open-room-create-modal"
+        data-mood-key="{{ active_mood or 'viral_trend' }}"
+        data-mood-label="{{ mood_presets[active_mood].label if active_mood and active_mood in mood_presets else 'New Campaign' }}"
+        class="flex items-center gap-2 rounded-xl bg-deep px-5 py-2.5 text-sm font-bold uppercase tracking-[0.12em] text-white shadow-lg shadow-deep/20 transition hover:translate-y-[-1px] hover:bg-[#1859a5]"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          class="h-4 w-4"
+        >
+          <path
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+        </svg>
+        New Room
+      </button>
+      <div class="relative">
+        <button
+          id="main-menu-trigger"
+          type="button"
+          class="flex items-center gap-2 rounded-xl border border-tide/30 bg-white px-5 py-2.5 text-sm font-bold uppercase tracking-[0.12em] text-deep shadow-sm transition hover:bg-tide/10"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            class="h-4 w-4"
+          >
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          Menu
+        </button>
+        <div
+          id="main-menu-panel"
+          class="absolute right-0 top-[calc(100%+0.75rem)] z-50 hidden w-80 overflow-hidden rounded-3xl border border-ink/10 bg-white/95 shadow-2xl shadow-ink/10 backdrop-blur"
+        >
+          <div class="border-b border-ink/10 px-5 py-4">
+            <p
+              class="font-display text-xs uppercase tracking-[0.24em] text-tide"
+            >
+              Navigation
+            </p>
+            <p class="mt-1 text-sm text-ink/55">Choose where to go.</p>
+          </div>
+          <div class="p-2">
+            <a
+              href="{{ url_for('profile') }}"
+              class="flex items-start gap-3 rounded-2xl px-4 py-3 transition hover:bg-tide/8"
+            >
+              <span
+                class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-tide/10 text-deep"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="h-4 w-4"
+                >
+                  <path d="M12 15l-2 5h4l-2-5zM4.5 9.5L9 4l3 3 3-3 4.5 5.5" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </span>
+              <span>
+                <span class="block text-sm font-bold text-ink"
+                  >Music Preferences</span
+                >
+                <span class="block text-xs text-ink/55"
+                  >Adjust the campaign taste profile.</span
+                >
+              </span>
+            </a>
+            <a
+              href="{{ url_for('favorites') }}"
+              class="flex items-start gap-3 rounded-2xl px-4 py-3 transition hover:bg-tide/8"
+            >
+              <span
+                class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-tide/10 text-deep"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="h-4 w-4"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="3" />
+                  <path d="M9 12l2 2 4-4" />
+                </svg>
+              </span>
+              <span>
+                <span class="block text-sm font-bold text-ink"
+                  >Approved Tracks</span
+                >
+                <span class="block text-xs text-ink/55"
+                  >Review saved recommendations.</span
+                >
+              </span>
+            </a>
+            <button
+              id="social-drawer-trigger"
+              type="button"
+              class="flex w-full items-start gap-3 rounded-2xl px-4 py-3 text-left transition hover:bg-tide/8"
+            >
+              <span
+                class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-sun/35 text-ink"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  class="h-4 w-4"
+                >
+                  <path d="M4 6h16M4 12h10M4 18h14" />
+                </svg>
+              </span>
+              <span>
+                <span class="block text-sm font-bold text-ink"
+                  >Team Network</span
+                >
+                <span class="block text-xs text-ink/55"
+                  >Open the social drawer for collaborators.</span
+                >
+              </span>
+            </button>
+
+          </div>
+        </div>
+      </div>
+      <a
+        href="{{ url_for('logout') }}"
+        class="rounded-xl bg-sun px-6 py-2.5 text-sm font-bold uppercase tracking-[0.12em] text-ink shadow-md shadow-amber/30 transition hover:translate-y-[-1px] hover:bg-amber"
+        >Logout</a
+      >
+    </div>
+  </div>
+
+  <!-- Campaign Input -->
+  <section class="rise mb-6" style="animation-delay: 32ms">
+    <div
+      class="rounded-3xl border border-ink/10 bg-white/80 px-6 py-5 shadow-float backdrop-blur"
+    >
+      <div
+        class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
+      >
+        <div class="max-w-2xl">
+          <p class="font-display text-xs uppercase tracking-[0.26em] text-tide">
+            Campaign input
+          </p>
+          <h3
+            class="mt-1 font-display text-xl font-bold tracking-tight text-ink"
+          >
+            Set the brief before recommendations
+          </h3>
+          <p class="mt-2 text-sm text-ink/60">
+            Define the objective, audience, platform, and energy so the music
+            matches the campaign, not just the listener profile.
+          </p>
+        </div>
+        {% if campaign_brief_summary or campaign_brief.creative_notes %}
+        <div
+          class="rounded-2xl border border-tide/15 bg-tide/8 px-4 py-3 text-sm text-ink/70 lg:max-w-sm"
+        >
+          <p
+            class="text-[10px] font-bold uppercase tracking-[0.18em] text-tide"
+          >
+            Active brief
+          </p>
+          {% if campaign_brief_summary %}
+          <p class="mt-1 font-semibold text-ink">
+            {{ campaign_brief_summary }}
+          </p>
+          {% endif %}
+          {% if campaign_brief.creative_notes %}
+          <p class="mt-1.5 text-xs text-ink/65 italic">
+            "{{ campaign_brief.creative_notes }}"
+          </p>
+          {% endif %}
+          {% if brief_nlp_matched %}
+          <div class="mt-2 flex flex-wrap items-center gap-1">
+            <span
+              class="text-[9px] font-extrabold uppercase tracking-wider text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full"
+              title="Brief notes analyzed by NLP semantic parser!"
+              >🤖 NLP Modulated</span
+            >
+            {% for word in brief_nlp_matched %}
+            <span
+              class="text-[9px] font-bold bg-white/80 border border-emerald-200/50 text-emerald-700 px-1.5 py-0.5 rounded-lg"
+              >{{ word }}</span
+            >
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+
+      <form
+        method="post"
+        action="{{ url_for('dashboard') }}"
+        enctype="multipart/form-data"
+        class="mt-5 grid gap-4 md:grid-cols-2"
+      >
+        <input type="hidden" name="mood" value="{{ active_mood }}" />
+
+        <label class="block">
+          <span
+            class="mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-ink/55"
+            >Campaign objective</span
+          >
+          <select
+            name="campaign_objective"
+            class="w-full rounded-2xl border border-ink/15 bg-white px-4 py-3 text-sm text-ink outline-none transition focus:border-tide focus:ring-4 focus:ring-tide/20"
+          >
+            <option value="">Select an objective</option>
+            {% for item in campaign_objectives %}
+            <option
+              value="{{ item.value }}"
+              {%
+              if
+              campaign_brief.objective == item.value
+              %}selected{%
+              endif
+              %}
+            >
+              {{ item.label }}
+            </option>
+            {% endfor %}
+          </select>
+          <span class="mt-2 block text-xs text-ink/45"
+            >Examples: awareness, excitement, nostalgia.</span
+          >
+        </label>
+
+        <label class="block">
+          <span
+            class="mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-ink/55"
+            >Target audience</span
+          >
+          <input
+            type="text"
+            name="target_audience"
+            value="{{ campaign_brief.target_audience }}"
+            placeholder="Gen Z shoppers in urban markets"
+            class="w-full rounded-2xl border border-ink/15 bg-white px-4 py-3 text-sm text-ink outline-none transition focus:border-tide focus:ring-4 focus:ring-tide/20"
+          />
+          <span class="mt-2 block text-xs text-ink/45"
+            >Include age, location, gender, or psychographic cues.</span
+          >
+        </label>
+
+        <label class="block">
+          <span
+            class="mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-ink/55"
+            >Platform / medium</span
+          >
+          <select
+            name="campaign_platform"
+            class="w-full rounded-2xl border border-ink/15 bg-white px-4 py-3 text-sm text-ink outline-none transition focus:border-tide focus:ring-4 focus:ring-tide/20"
+          >
+            <option value="">Select a platform</option>
+            {% for item in campaign_platforms %}
+            <option
+              value="{{ item.value }}"
+              {%
+              if
+              campaign_brief.platform == item.value
+              %}selected{%
+              endif
+              %}
+            >
+              {{ item.label }}
+            </option>
+            {% endfor %}
+          </select>
+          <span class="mt-2 block text-xs text-ink/45"
+            >Use the channel where the music will actually live.</span
+          >
+        </label>
+
+        <label class="block">
+          <span
+            class="mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-ink/55"
+            >Mood / energy level</span
+          >
+          <select
+            name="campaign_energy"
+            class="w-full rounded-2xl border border-ink/15 bg-white px-4 py-3 text-sm text-ink outline-none transition focus:border-tide focus:ring-4 focus:ring-tide/20"
+          >
+            <option value="">Select an energy level</option>
+            {% for item in campaign_energy_levels %}
+            <option
+              value="{{ item.value }}"
+              {%
+              if
+              campaign_brief.energy == item.value
+              %}selected{%
+              endif
+              %}
+            >
+              {{ item.label }}
+            </option>
+            {% endfor %}
+          </select>
+          <span class="mt-2 block text-xs text-ink/45"
+            >This refines the emotional pace of the shortlist.</span
+          >
+        </label>
+
+        <label class="block md:col-span-2">
+          <span
+            class="mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-ink/55"
+            >Creative notes</span
+          >
+          <textarea
+            name="campaign_notes"
+            rows="3"
+            placeholder="Theme, hook, brand message, or usage notes"
+            class="w-full rounded-2xl border border-ink/15 bg-white px-4 py-3 text-sm text-ink outline-none transition focus:border-tide focus:ring-4 focus:ring-tide/20"
+          >
+{{ campaign_brief.creative_notes }}</textarea
+          >
+        </label>
+
+
+        <div class="flex flex-wrap items-center gap-3 md:col-span-2">
+          <button
+            type="submit"
+            class="rounded-xl bg-gradient-to-r from-deep to-tide px-5 py-3 text-xs font-extrabold uppercase tracking-[0.14em] text-white shadow-lg shadow-tide/25 transition hover:from-[#1859a5] hover:to-deep"
+          >
+            Save campaign brief
+          </button>
+          {% if campaign_brief_summary or active_mood %}
+          <a
+            href="{{ url_for('dashboard', clear_campaign=1, mood=active_mood) }}"
+            class="rounded-xl border border-ink/15 bg-white px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] text-ink/70 transition hover:bg-ink/[0.04]"
+            >Clear brief</a
+          >
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- Campaign Mood Selector -->
+  <section class="rise mb-6" style="animation-delay: 40ms">
+    <div
+      class="rounded-3xl border border-ink/10 bg-white/80 px-6 py-5 shadow-float backdrop-blur"
+    >
+      <div class="flex items-center justify-between gap-3 mb-4">
+        <div>
+          <p class="font-display text-xs uppercase tracking-[0.26em] text-tide">
+            Campaign brief
+          </p>
+          <h3
+            class="mt-1 font-display text-xl font-bold tracking-tight text-ink"
+          >
+            What's the ad mood?
+          </h3>
+        </div>
+        {% if campaign_mood %}
+        <a
+          href="{{ url_for('dashboard') }}"
+          class="rounded-full border border-ink/15 bg-ink/5 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wide text-ink/60 transition hover:bg-ink/10"
+          >✕ Clear brief</a
+        >
+        {% endif %}
+      </div>
+      <div class="grid grid-cols-3 gap-2 sm:grid-cols-3 lg:grid-cols-3">
+        {% for key, preset in mood_presets.items() %}
+        <div class="relative group">
+          <a
+            href="{{ url_for('dashboard', mood=key) }}"
+            class="flex items-start gap-3 rounded-2xl border-2 p-3 transition hover:-translate-y-0.5 hover:shadow-md {% if active_mood == key %}border-current shadow-lg shadow-current/20{% else %}border-transparent bg-ink/[0.03] hover:border-ink/15{% endif %}"
+            data-mood-card="true"
+            data-mood-active="{{ '1' if active_mood == key else '0' }}"
+            data-mood-color="{{ preset.color }}"
+          >
+            <span
+              class="text-2xl leading-none mt-0.5 transition group-hover:scale-110 shrink-0"
+              >{{ preset.emoji }}</span
+            >
+            <div class="min-w-0">
+              <p
+                class="text-xs font-bold {% if active_mood == key %}{% else %}text-ink{% endif %} leading-tight"
+              >
+                {{ preset.label }}
+              </p>
+              <p
+                class="mt-0.5 text-[10px] leading-snug {% if active_mood == key %}opacity-70{% else %}text-ink/45{% endif %}"
+              >
+                {{ preset.desc }}
+              </p>
+            </div>
+          </a>
+          <div
+            class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <button
+              type="button"
+              title="Create a team room for {{ preset.label }}"
+              class="open-room-create-modal flex items-center gap-1 rounded-full bg-white/90 border border-ink/15 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-ink/60 shadow-sm hover:bg-tide/10 hover:text-tide hover:border-tide/30 transition backdrop-blur"
+              data-mood-key="{{ key }}"
+              data-mood-label="{{ preset.label }}"
+            >
+              <svg
+                class="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+              Room
+            </button>
+          </div>
         </div>
         {% endfor %}
       </div>
-    {% endif %}
-  {% endwith %}
-
-  <!-- Top bar: greeting + actions -->
-  <div class="rise mb-8 flex flex-col items-start justify-between gap-4 rounded-3xl border border-tide/20 bg-white/80 px-7 py-6 shadow-float backdrop-blur sm:flex-row sm:items-center">
-    <div>
-      <p class="font-display text-xs uppercase tracking-[0.26em] text-tide">Welcome back</p>
-      <h2 class="mt-1 font-display text-3xl font-bold tracking-tight text-ink md:text-4xl">{{ display_name }}</h2>
-      <p class="mt-0.5 text-xs text-ink/50">{{ email }}</p>
     </div>
-    <div class="flex shrink-0 items-center gap-3">
-      <a href="{{ url_for('profile') }}" class="flex items-center gap-1.5 rounded-xl border border-tide/30 bg-tide/10 px-5 py-2.5 text-sm font-bold uppercase tracking-[0.12em] text-deep shadow-sm transition hover:bg-tide/20">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-        Profile
-      </a>
-      <a href="{{ url_for('favorites') }}" class="flex items-center gap-1.5 rounded-xl border border-tide/30 bg-tide/10 px-5 py-2.5 text-sm font-bold uppercase tracking-[0.12em] text-deep shadow-sm transition hover:bg-tide/20">
-        <svg viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4"><path d="M12 21l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.18L12 21z"/></svg>
-        Favorites
-      </a>
-      <a href="{{ url_for('logout') }}" class="rounded-xl bg-sun px-6 py-2.5 text-sm font-bold uppercase tracking-[0.12em] text-ink shadow-md shadow-amber/30 transition hover:translate-y-[-1px] hover:bg-amber">Logout</a>
+  </section>
+
+  {% if campaign_mood %}
+  <!-- Active campaign mood banner -->
+  <div
+    class="rise mb-6 flex items-center gap-3 rounded-2xl border px-5 py-3"
+    style="animation-delay: 55ms"
+    data-mood-banner="true"
+    data-mood-color="{{ campaign_mood.color }}"
+  >
+    <span class="text-2xl">{{ campaign_mood.emoji }}</span>
+    <div>
+      <p class="text-sm font-bold text-ink">
+        Showing tracks for:
+        <span data-mood-text="true" data-mood-color="{{ campaign_mood.color }}"
+          >{{ campaign_mood.label }}</span
+        >
+      </p>
+      <p class="text-xs text-ink/50">
+        Translated to {{ campaign_mood.summary }}
+      </p>
     </div>
   </div>
+  {% endif %}
 
   <div class="grid gap-6 lg:grid-cols-[1.55fr_0.95fr] lg:items-start">
-    {% include "_feed_section.html" %}
-    {% include "_social_sidebar.html" %}
+    <div class="space-y-6">
+      <!-- Tabs Navigation -->
+      <div
+        class="rise flex rounded-2xl bg-white/70 p-1.5 border border-ink/10 shadow-sm backdrop-blur"
+        style="animation-delay: 58ms"
+      >
+        <button
+          id="tab-brief-btn"
+          class="flex-1 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-200 bg-gradient-to-r from-deep to-tide text-white shadow-md shadow-tide/20"
+          onclick="switchDashboardTab('brief')"
+        >
+          &#127919; Brief Soundtrack
+        </button>
+        <button
+          id="tab-vibe-btn"
+          class="flex-1 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-200 text-ink/60 hover:text-ink hover:bg-ink/[0.03]"
+          onclick="switchDashboardTab('vibe')"
+        >
+          &#127915; Enterprise Vibe Matcher
+        </button>
+        </div>
+
+      <!-- Tab Content 1: Brief Feed -->
+      <div id="tab-brief-content" class="block">
+        {% include "_feed_section.html" %}
+      </div>
+
+      <!-- Tab Content 2: Vibe Matcher (Enterprise) -->
+      <div id="tab-vibe-content" class="hidden">
+        <section
+          class="rise rounded-3xl border border-ink/10 bg-white/80 p-6 shadow-float backdrop-blur animate-rise"
+          style="animation-delay: 62ms"
+        >
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <p
+                class="font-display text-xs uppercase tracking-[0.26em] text-tide"
+              >
+                &#127915; Enterprise Curation
+              </p>
+              <h3
+                class="mt-1 font-display text-2xl font-bold tracking-tight text-ink"
+              >
+               Now... Make it your own!
+              </h3>
+              <p class="mt-2 text-xs text-ink/60">
+                Search by reference song, desired vibe keyword, or tune the
+                acoustic sliders manually in real-time. Matches are calculated via
+                5D Cosine Similarity against the track library.
+              </p>
+            </div>
+
+            <!-- Floating Save Indicator Pill -->
+            <div id="vibe-save-indicator" class="opacity-0 transition-opacity duration-300 pointer-events-none rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 bg-slate-100 text-slate-600">
+              <span id="vibe-save-indicator-dot" class="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+              <span id="vibe-save-indicator-text" class="text-ink/60">Saved</span>
+            </div>
+          </div>
+
+          <!-- Unlocked Grid View -->
+          <div id="vibe-matcher-unlocked-grid" class="{% if not (prefs and prefs.enable_acoustic_matcher) %}hidden{% endif %} grid gap-6 lg:grid-cols-[1.10fr_0.90fr] lg:items-start">
+            <!-- Left Column: Controls (Sync & Sliders) -->
+            <div class="space-y-6">
+              <!-- Vibe Searcher & Reference Sync Block -->
+              <div
+                class="mb-6 rounded-2xl border border-ink/10 bg-white/50 p-4 shadow-sm"
+              >
+            <h4
+              class="mb-3 text-[11px] font-bold uppercase tracking-[0.14em] text-tide"
+            >
+              &#128270; Reference Track & Vibe Sync
+            </h4>
+            <div class="flex gap-2">
+              <input
+                id="vibe-search-input"
+                type="text"
+                placeholder="Type a vibe (e.g. 'uplifting acoustic piano') or paste a Spotify URL..."
+                class="flex-1 rounded-xl border border-ink/15 bg-white px-4 py-2.5 text-xs text-ink outline-none transition focus:border-tide focus:ring-4 focus:ring-tide/20"
+              />
+              <button
+                id="vibe-sync-btn"
+                type="button"
+                class="rounded-xl bg-deep hover:bg-tide px-5 py-2.5 text-xs font-extrabold uppercase tracking-wider text-white shadow-md shadow-deep/20 transition-all"
+              >
+                Sync
+              </button>
+              <button
+                id="vibe-mic-btn"
+                type="button"
+                class="rounded-xl bg-purple-600 hover:bg-purple-700 px-4 py-2.5 text-xs font-extrabold uppercase tracking-wider text-white shadow-md shadow-purple-600/20 transition-all flex items-center gap-1"
+              >
+                🎙️ Shazam-Sync
+              </button>
+            </div>
+
+            <!-- Voice Humming Wave Feedback Area -->
+            <div
+              id="vibe-mic-wave-container"
+              class="hidden mt-3 bg-purple-50/50 border border-purple-100 rounded-xl p-3 items-center justify-between"
+            >
+              <div class="flex items-center gap-3">
+                <span class="relative flex h-3 w-3 shrink-0">
+                  <span
+                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"
+                  ></span>
+                  <span
+                    class="relative inline-flex rounded-full h-3 w-3 bg-purple-600"
+                  ></span>
+                </span>
+                <p
+                  class="text-xs font-bold text-purple-700"
+                  id="mic-status-text"
+                >
+                  Listening to your voice... hum or sing now!
+                </p>
+              </div>
+              <div class="flex gap-0.5 items-end h-6">
+                <span
+                  class="w-1 bg-purple-500 rounded h-2 animate-pulse"
+                  style="animation-duration: 0.6s"
+                ></span>
+                <span
+                  class="w-1 bg-purple-500 rounded h-4 animate-pulse"
+                  style="animation-duration: 0.8s"
+                ></span>
+                <span
+                  class="w-1 bg-purple-600 rounded h-6 animate-pulse"
+                  style="animation-duration: 0.5s"
+                ></span>
+                <span
+                  class="w-1 bg-purple-500 rounded h-3 animate-pulse"
+                  style="animation-duration: 0.7s"
+                ></span>
+                <span
+                  class="w-1 bg-purple-500 rounded h-1 animate-pulse"
+                  style="animation-duration: 0.9s"
+                ></span>
+              </div>
+            </div>
+
+            <!-- Popular Reference Drops -->
+            <div class="mt-3">
+              <p
+                class="mb-1.5 text-[9px] font-bold uppercase tracking-wider text-ink/40"
+              >
+                Select Popular Reference Song
+              </p>
+              <div class="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  class="popular-ref-btn rounded-lg border border-ink/10 bg-white/80 px-2.5 py-1 text-[10px] font-semibold text-ink/75 hover:bg-tide/10 hover:border-tide/30 transition"
+                  data-ref="get-lucky"
+                >
+                  &#127926; Daft Punk - Get Lucky
+                </button>
+                <button
+                  type="button"
+                  class="popular-ref-btn rounded-lg border border-ink/10 bg-white/80 px-2.5 py-1 text-[10px] font-semibold text-ink/75 hover:bg-tide/10 hover:border-tide/30 transition"
+                  data-ref="bad-guy"
+                >
+                  &#127926; Billie Eilish - Bad Guy
+                </button>
+                <button
+                  type="button"
+                  class="popular-ref-btn rounded-lg border border-ink/10 bg-white/80 px-2.5 py-1 text-[10px] font-semibold text-ink/75 hover:bg-tide/10 hover:border-tide/30 transition"
+                  data-ref="zimmer-time"
+                >
+                  &#127926; Hans Zimmer - Time
+                </button>
+                <button
+                  type="button"
+                  class="popular-ref-btn rounded-lg border border-ink/10 bg-white/80 px-2.5 py-1 text-[10px] font-semibold text-ink/75 hover:bg-tide/10 hover:border-tide/30 transition"
+                  data-ref="shape-of-you"
+                >
+                  &#127926; Ed Sheeran - Shape of You
+                </button>
+                <button
+                  type="button"
+                  class="popular-ref-btn rounded-lg border border-ink/10 bg-white/80 px-2.5 py-1 text-[10px] font-semibold text-ink/75 hover:bg-tide/10 hover:border-tide/30 transition"
+                  data-ref="lofi-girl"
+                >
+                  &#127926; Lofi Study Beat
+                </button>
+              </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div
+              id="vibe-loader"
+              class="hidden mt-3 flex items-center justify-center gap-2 text-xs font-semibold text-tide transition-all duration-300"
+            >
+              <svg
+                class="animate-spin h-4 w-4 text-tide"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              <span>Analyzing acoustic fingerprint...</span>
+            </div>
+          </div>
+
+          <!-- Dynamic Acoustic Vector Tuner Sliders -->
+          <div
+            class="mb-6 rounded-2xl border border-ink/10 bg-white/50 p-4 shadow-sm"
+          >
+            <h4
+              class="mb-4 text-[11px] font-bold uppercase tracking-[0.14em] text-tide"
+            >
+              &#127915; Interactive Acoustic Tuner
+            </h4>
+            <div class="space-y-4">
+              <!-- Danceability -->
+              <div>
+                <div
+                  class="flex items-center justify-between text-xs font-bold text-ink"
+                >
+                  <span>💃 Danceability (Groove)</span>
+                  <span id="vibe_dance_val" class="text-tide font-mono"
+                    >{% if prefs and prefs.pref_danceability is not none %}{{
+                    prefs.pref_danceability|round(2) }}{% else %}0.50{% endif
+                    %}</span
+                  >
+                </div>
+                <input
+                  type="range"
+                  id="vibe_dance"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="{% if prefs and prefs.pref_danceability is not none %}{{ prefs.pref_danceability }}{% else %}0.5{% endif %}"
+                  class="w-full accent-deep cursor-pointer vibe-slider"
+                />
+              </div>
+              <!-- Energy -->
+              <div>
+                <div
+                  class="flex items-center justify-between text-xs font-bold text-ink"
+                >
+                  <span>⚡ Energy (Intensity)</span>
+                  <span id="vibe_energy_val" class="text-tide font-mono"
+                    >{% if prefs and prefs.pref_energy is not none %}{{
+                    prefs.pref_energy|round(2) }}{% else %}0.50{% endif %}</span
+                  >
+                </div>
+                <input
+                  type="range"
+                  id="vibe_energy"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="{% if prefs and prefs.pref_energy is not none %}{{ prefs.pref_energy }}{% else %}0.5{% endif %}"
+                  class="w-full accent-deep cursor-pointer vibe-slider"
+                />
+              </div>
+              <!-- Valence -->
+              <div>
+                <div
+                  class="flex items-center justify-between text-xs font-bold text-ink"
+                >
+                  <span>😊 Valence (Happiness)</span>
+                  <span id="vibe_valence_val" class="text-tide font-mono"
+                    >{% if prefs and prefs.pref_valence is not none %}{{
+                    prefs.pref_valence|round(2) }}{% else %}0.50{% endif
+                    %}</span
+                  >
+                </div>
+                <input
+                  type="range"
+                  id="vibe_valence"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="{% if prefs and prefs.pref_valence is not none %}{{ prefs.pref_valence }}{% else %}0.5{% endif %}"
+                  class="w-full accent-deep cursor-pointer vibe-slider"
+                />
+              </div>
+              <!-- Acousticness -->
+              <div>
+                <div
+                  class="flex items-center justify-between text-xs font-bold text-ink"
+                >
+                  <span>🎻 Acousticness (Organic texture)</span>
+                  <span id="vibe_acoustic_val" class="text-tide font-mono"
+                    >{% if prefs and prefs.pref_acousticness is not none %}{{
+                    prefs.pref_acousticness|round(2) }}{% else %}0.50{% endif
+                    %}</span
+                  >
+                </div>
+                <input
+                  type="range"
+                  id="vibe_acoustic"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="{% if prefs and prefs.pref_acousticness is not none %}{{ prefs.pref_acousticness }}{% else %}0.5{% endif %}"
+                  class="w-full accent-deep cursor-pointer vibe-slider"
+                />
+              </div>
+              <!-- Instrumentalness -->
+              <div>
+                <div
+                  class="flex items-center justify-between text-xs font-bold text-ink"
+                >
+                  <span>🎹 Instrumentalness (Vocal-free)</span>
+                  <span id="vibe_instrumental_val" class="text-tide font-mono"
+                    >{% if prefs and prefs.pref_instrumentalness is not none
+                    %}{{ prefs.pref_instrumentalness|round(2) }}{% else %}0.00{%
+                    endif %}</span
+                  >
+                </div>
+                <input
+                  type="range"
+                  id="vibe_instrumental"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="{% if prefs and prefs.pref_instrumentalness is not none %}{{ prefs.pref_instrumentalness }}{% else %}0.0{% endif %}"
+                  class="w-full accent-deep cursor-pointer vibe-slider"
+                />
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Card 3: Campaign Curation Targets -->
+          <div class="rounded-2xl border border-ink/10 bg-white/50 p-5 shadow-sm">
+            <details class="group cursor-pointer animate-rise" id="vibe-targets-details">
+              <summary class="flex items-center justify-between text-xs font-bold text-deep uppercase tracking-wider select-none list-none">
+                <span class="flex items-center gap-2">🎯 Campaign Curation Targets</span>
+                <span class="transition group-open:rotate-180">
+                  <svg class="w-4 h-4 text-deep" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </summary>
+              <div class="mt-5 space-y-5 cursor-default" onclick="event.stopPropagation()">
+                <!-- Industry Focus -->
+                <div>
+                  <label for="vibe_industry_focus" class="block text-xs font-bold text-ink mb-1.5">Primary Industry</label>
+                  <select
+                    id="vibe_industry_focus"
+                    name="industry_focus"
+                    class="vibe-save-input w-full rounded-xl border border-ink/15 bg-white px-3 py-2 text-xs text-ink outline-none transition focus:border-tide focus:ring-4 focus:ring-tide/20"
+                  >
+                    <option value="">Select the industry this marketing team serves</option>
+                    {% set industry_options = [
+                      ('consumer_goods', 'Consumer Goods'),
+                      ('fashion_lifestyle', 'Fashion & Lifestyle'),
+                      ('tech_saas', 'Tech / SaaS'),
+                      ('retail', 'Retail & Ecommerce'),
+                      ('hospitality', 'Hospitality & Travel'),
+                      ('fitness_wellness', 'Fitness & Wellness'),
+                      ('entertainment', 'Entertainment & Media'),
+                      ('education', 'Education'),
+                      ('finance', 'Finance & Insurance'),
+                      ('other', 'Other / General Brand')
+                    ] %}
+                    {% for value, label in industry_options %}
+                    <option value="{{ value }}" {% if prefs and prefs.industry_focus == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <!-- Target Generation -->
+                <div>
+                  <label for="vibe_target_generation" class="block text-xs font-bold text-ink mb-1.5">Target Generation</label>
+                  <select
+                    id="vibe_target_generation"
+                    name="target_generation"
+                    class="vibe-save-input w-full rounded-xl border border-ink/15 bg-white px-3 py-2 text-xs text-ink outline-none transition focus:border-tide focus:ring-4 focus:ring-tide/20"
+                  >
+                    <option value="">Select the target generation</option>
+                    <option value="gen_z" {% if prefs and prefs.target_generation == 'gen_z' %}selected{% endif %}>Gen Z</option>
+                    <option value="millennials" {% if prefs and prefs.target_generation == 'millennials' %}selected{% endif %}>Millennials</option>
+                    <option value="boomers" {% if prefs and prefs.target_generation == 'boomers' %}selected{% endif %}>Boomers</option>
+                    <option value="silent_generation" {% if prefs and prefs.target_generation == 'silent_generation' %}selected{% endif %}>Silent Generation</option>
+                  </select>
+                </div>
+
+                <!-- Campaign Theme -->
+                <div>
+                  <label for="vibe_target_campaign" class="block text-xs font-bold text-ink mb-1.5">Campaign Theme</label>
+                  <select
+                    id="vibe_target_campaign"
+                    name="target_campaign"
+                    class="vibe-save-input w-full rounded-xl border border-ink/15 bg-white px-3 py-2 text-xs text-ink outline-none transition focus:border-tide focus:ring-4 focus:ring-tide/20"
+                  >
+                    <option value="">Select the campaign theme</option>
+                    <option value="summer" {% if prefs and prefs.target_campaign == 'summer' %}selected{% endif %}>Summer</option>
+                    <option value="holiday" {% if prefs and prefs.target_campaign == 'holiday' %}selected{% endif %}>Holiday</option>
+                    <option value="launch" {% if prefs and prefs.target_campaign == 'launch' %}selected{% endif %}>Product Launch</option>
+                    <option value="corporate" {% if prefs and prefs.target_campaign == 'corporate' %}selected{% endif %}>Corporate</option>
+                    <option value="social" {% if prefs and prefs.target_campaign == 'social' %}selected{% endif %}>Social Media Promo</option>
+                  </select>
+                </div>
+
+                <!-- Targeted Genres -->
+                <div class="border-t border-slate-100 pt-4">
+                  <div class="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <label class="block text-xs font-bold text-ink mb-0.5">Targeted Genres</label>
+                      <p class="text-[10px] text-ink/50">Choose sound lanes for brand recommendations</p>
+                    </div>
+                    <span id="vibe_selected_count" class="rounded-full border border-tide/30 bg-tide/10 px-2.5 py-0.5 text-[10px] font-semibold text-deep">0 selected</span>
+                  </div>
+
+                  <input
+                    id="vibe_genre_search"
+                    type="text"
+                    placeholder="Search genres..."
+                    class="mb-3 w-full rounded-xl border border-ink/15 bg-white px-3 py-2 text-xs text-ink outline-none transition focus:border-tide focus:ring-4 focus:ring-tide/20"
+                  />
+
+                  <div id="vibe_selected_genres_panel" class="mb-3 rounded-xl border border-deep/20 bg-deep/5 p-2.5">
+                    <p class="mb-1.5 text-[9px] font-semibold uppercase tracking-wider text-deep/80">Selected Genres (click to remove)</p>
+                    <div id="vibe_selected_genres_chips" class="flex flex-wrap gap-1.5"></div>
+                  </div>
+
+                  <div id="vibe_genre_options" class="max-h-48 overflow-y-auto rounded-xl border border-ink/10 bg-white/70 p-2.5">
+                    <div class="flex flex-wrap gap-1.5">
+                      {% for genre in available_genres %}
+                      <label class="vibe-genre-option cursor-pointer" data-genre="{{ genre|lower }}">
+                        <input
+                          type="checkbox"
+                          name="vibe_genres"
+                          value="{{ genre }}"
+                          class="vibe-genre-checkbox peer hidden"
+                          {% if genre in saved_genres %}checked{% endif %}
+                        />
+                        <span class="inline-block rounded-full border border-tide/30 bg-tide/5 px-3 py-1 text-xs font-semibold text-ink/70 transition peer-checked:border-deep peer-checked:bg-gradient-to-r peer-checked:from-deep peer-checked:to-tide peer-checked:text-white peer-checked:shadow-sm hover:border-tide hover:text-ink">
+                          {{ genre }}
+                        </span>
+                      </label>
+                      {% endfor %}
+                    </div>
+                  </div>
+                  <p id="vibe_genre_empty_state" class="mt-2 hidden text-[10px] text-ink/50">No genres match your search.</p>
+                </div>
+              </div>
+            </details>
+          </div>
+
+          <!-- Card 4: Campaign Fit Weights & Multi-Vector Curation -->
+          <div class="rounded-2xl border border-ink/10 bg-white/50 p-5 shadow-sm">
+            <details class="group cursor-pointer animate-rise" id="vibe-weights-details">
+              <summary class="flex items-center justify-between text-xs font-bold text-deep uppercase tracking-wider select-none list-none">
+                <span class="flex items-center gap-2">⚖️ Curation Weights & Importance</span>
+                <span class="transition group-open:rotate-180">
+                  <svg class="w-4 h-4 text-deep" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </summary>
+              <div class="mt-5 space-y-5 cursor-default" onclick="event.stopPropagation()">
+                <!-- Campaign Fit Influence Weights -->
+                <div>
+                  <h5 class="text-[10px] font-bold text-tide uppercase tracking-wider mb-3">⚖️ Feature Weights Multipliers</h5>
+                  <div class="space-y-4">
+                    {% for item in feature_weight_controls %}
+                    {% set current = feature_weight_values.get(item.key, item.default) %}
+                    <div>
+                      <div class="mb-1 flex items-baseline justify-between">
+                        <label for="vibe_w_{{ item.key }}" class="text-xs font-bold text-ink">{{ item.label }}</label>
+                        <span id="vibe_w_{{ item.key }}_val" class="text-xs font-semibold text-tide font-mono">{{ current|round(2) }}</span>
+                      </div>
+                      <input
+                        type="range"
+                        id="vibe_w_{{ item.key }}"
+                        name="weight_{{ item.key }}"
+                        min="0"
+                        max="2"
+                        step="0.05"
+                        value="{{ current|round(2) }}"
+                        class="w-full accent-deep cursor-pointer vibe-slider vibe-save-input"
+                      />
+                      <div class="mt-0.5 flex justify-between text-[8px] text-ink/30">
+                        <span>0</span><span>1 (standard)</span><span>2 (double)</span>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  </div>
+                </div>
+
+                <!-- Multi-Vector Fitness Weights -->
+                <div class="border-t border-slate-100 pt-4">
+                  <h5 class="text-[10px] font-bold text-tide uppercase tracking-wider mb-3">🎯 Multi-Vector Fitness Importance</h5>
+                  
+                  {% set weight_base = prefs.weight_base_audio if prefs and prefs.weight_base_audio is not none else 0.40 %}
+                  {% set weight_ind = prefs.weight_industry if prefs and prefs.weight_industry is not none else 0.20 %}
+                  {% set weight_gen = prefs.weight_generation if prefs and prefs.weight_generation is not none else 0.20 %}
+                  {% set weight_camp = prefs.weight_campaign if prefs and prefs.weight_campaign is not none else 0.20 %}
+
+                  <div class="space-y-4">
+                    <!-- Base Audio -->
+                    <div>
+                      <div class="mb-1 flex items-baseline justify-between">
+                        <label for="vibe_weight_base_audio" class="text-xs font-bold text-ink">Base Audio Match Importance</label>
+                        <span id="vibe_weight_base_audio_val" class="text-xs font-semibold text-tide font-mono">{{ weight_base|round(2) }}</span>
+                      </div>
+                      <input
+                        type="range"
+                        id="vibe_weight_base_audio"
+                        name="weight_base_audio"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        value="{{ weight_base|round(2) }}"
+                        class="w-full accent-deep cursor-pointer vibe-slider vibe-save-input"
+                      />
+                    </div>
+
+                    <!-- Industry -->
+                    <div>
+                      <div class="mb-1 flex items-baseline justify-between">
+                        <label for="vibe_weight_industry" class="text-xs font-bold text-ink">Industry Match Importance</label>
+                        <span id="vibe_weight_industry_val" class="text-xs font-semibold text-tide font-mono">{{ weight_ind|round(2) }}</span>
+                      </div>
+                      <input
+                        type="range"
+                        id="vibe_weight_industry"
+                        name="weight_industry"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        value="{{ weight_ind|round(2) }}"
+                        class="w-full accent-deep cursor-pointer vibe-slider vibe-save-input"
+                      />
+                    </div>
+
+                    <!-- Generation -->
+                    <div>
+                      <div class="mb-1 flex items-baseline justify-between">
+                        <label for="vibe_weight_generation" class="text-xs font-bold text-ink">Generation Match Importance</label>
+                        <span id="vibe_weight_generation_val" class="text-xs font-semibold text-tide font-mono">{{ weight_gen|round(2) }}</span>
+                      </div>
+                      <input
+                        type="range"
+                        id="vibe_weight_generation"
+                        name="weight_generation"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        value="{{ weight_gen|round(2) }}"
+                        class="w-full accent-deep cursor-pointer vibe-slider vibe-save-input"
+                      />
+                    </div>
+
+                    <!-- Campaign -->
+                    <div>
+                      <div class="mb-1 flex items-baseline justify-between">
+                        <label for="vibe_weight_campaign" class="text-xs font-bold text-ink">Campaign Match Importance</label>
+                        <span id="vibe_weight_campaign_val" class="text-xs font-semibold text-tide font-mono">{{ weight_camp|round(2) }}</span>
+                      </div>
+                      <input
+                        type="range"
+                        id="vibe_weight_campaign"
+                        name="weight_campaign"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        value="{{ weight_camp|round(2) }}"
+                        class="w-full accent-deep cursor-pointer vibe-slider vibe-save-input"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </details>
+          </div>
+
+          <!-- Card 5: Adaptive Learning & Notes -->
+          <div class="rounded-2xl border border-ink/10 bg-white/50 p-5 shadow-sm">
+            <details class="group cursor-pointer animate-rise" id="vibe-learning-details">
+              <summary class="flex items-center justify-between text-xs font-bold text-deep uppercase tracking-wider select-none list-none">
+                <span class="flex items-center gap-2">🔄 Adaptive Learning & Notes</span>
+                <span class="transition group-open:rotate-180">
+                  <svg class="w-4 h-4 text-deep" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
+              </summary>
+              <div class="mt-5 space-y-5 cursor-default" onclick="event.stopPropagation()">
+                
+                <!-- Approved Song Signal Toggle -->
+                <label class="flex items-center justify-between gap-3 rounded-xl border border-ink/10 bg-white/70 px-3.5 py-2.5">
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-ink">Use engagement from approved tracks</p>
+                    <p class="text-[10px] text-ink/50">Approved tracks shape vector first</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    id="vibe_use_interaction_signal"
+                    name="use_interaction_signal"
+                    class="h-4 w-4 accent-deep vibe-save-input"
+                    {% if prefs and prefs.use_interaction_signal %}checked{% endif %}
+                  />
+                </label>
+
+                <!-- Feedback Blend slider -->
+                {% set interaction_blend_value = prefs.interaction_blend if prefs and prefs.interaction_blend is not none else 0.65 %}
+                <div>
+                  <div class="mb-1 flex items-baseline justify-between">
+                    <label for="vibe_interaction_blend" class="text-xs font-bold text-ink">Feedback-first weight</label>
+                    <span id="vibe_interaction_blend_val" class="text-xs font-semibold text-tide font-mono">{{ interaction_blend_value|round(2) }}</span>
+                  </div>
+                  <input
+                    type="range"
+                    id="vibe_interaction_blend"
+                    name="interaction_blend"
+                    min="0.55"
+                    max="0.9"
+                    step="0.05"
+                    value="{{ interaction_blend_value|round(2) }}"
+                    class="w-full accent-deep cursor-pointer vibe-slider vibe-save-input"
+                  />
+                </div>
+
+                <!-- Genre Boost Toggle -->
+                <label class="flex items-center justify-between gap-3 rounded-xl border border-ink/10 bg-white/70 px-3.5 py-2.5 border-t border-slate-100 pt-4">
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-ink">Boost selected genres</p>
+                    <p class="text-[10px] text-ink/50">Give selected genres extra weight</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    id="vibe_enable_genre_boost"
+                    name="enable_genre_boost"
+                    class="h-4 w-4 accent-deep vibe-save-input"
+                    {% if prefs and prefs.enable_genre_boost %}checked{% endif %}
+                  />
+                </label>
+
+                <!-- Genre Boost weight slider -->
+                {% set genre_boost_value = prefs.genre_boost_weight if prefs and prefs.genre_boost_weight is not none else 1 %}
+                <div>
+                  <div class="mb-1 flex items-baseline justify-between">
+                    <label for="vibe_genre_boost_weight" class="text-xs font-bold text-ink">Genre alignment boost</label>
+                    <span id="vibe_genre_boost_weight_val" class="text-xs font-semibold text-tide font-mono">{{ genre_boost_value|round(2) }}</span>
+                  </div>
+                  <input
+                    type="range"
+                    id="vibe_genre_boost_weight"
+                    name="genre_boost_weight"
+                    min="1"
+                    max="3"
+                    step="1"
+                    value="{{ genre_boost_value|round(2) }}"
+                    class="w-full accent-deep cursor-pointer vibe-slider vibe-save-input"
+                  />
+                </div>
+
+                <!-- Personalized notes details -->
+                <div class="border-t border-slate-100 pt-4">
+                  <label class="flex items-center justify-between gap-3 rounded-xl border border-ink/10 bg-white/70 px-3.5 py-2.5 mb-2">
+                    <div class="min-w-0">
+                      <p class="text-xs font-bold text-ink">Enable campaign alignment notes</p>
+                      <p class="text-[10px] text-ink/50">Contextual text directions for similarity</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      id="vibe_enable_personalized_similarity"
+                      name="enable_personalized_similarity"
+                      class="h-4 w-4 accent-deep vibe-save-input"
+                      {% if prefs and prefs.enable_personalized_similarity %}checked{% endif %}
+                    />
+                  </label>
+
+                  <textarea
+                    id="vibe_personalized_similarity_text"
+                    name="personalized_similarity_text"
+                    rows="3"
+                    maxlength="1000"
+                    placeholder="Describe what matters, e.g. premium and calm for ads..."
+                    class="vibe-save-input w-full rounded-xl border border-ink/15 bg-white px-3 py-2 text-xs text-ink outline-none transition focus:border-tide focus:ring-4 focus:ring-tide/20"
+                  >{{ prefs.personalized_similarity_text if prefs and prefs.personalized_similarity_text else '' }}</textarea>
+                </div>
+
+                <!-- Disable/Lock matcher toggle -->
+                <div class="border-t border-slate-100 pt-4">
+                  <label class="flex items-center justify-between gap-3 rounded-xl border border-dashed border-red-200 bg-red-50/30 px-3.5 py-2.5">
+                    <div class="min-w-0">
+                      <p class="text-xs font-bold text-ink">Acoustic Matcher Enabled</p>
+                      <p class="text-[10px] text-ink/50">Toggle visibility of this tool on the dashboard</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      id="vibe_enable_acoustic_matcher"
+                      name="enable_acoustic_matcher"
+                      class="h-4 w-4 accent-red-600 vibe-save-input"
+                      {% if prefs and prefs.enable_acoustic_matcher %}checked{% endif %}
+                    />
+                  </label>
+                </div>
+              </div>
+            </details>
+          </div>
+          </div>
+
+          <!-- Right Column: Results & Profile-Alone Recommendations -->
+          <div class="space-y-6">
+            <!-- Matching Tracks List Section -->
+          <div>
+            <div
+              class="flex items-center justify-between mb-4 border-b border-ink/10 pb-2"
+            >
+              <h4 class="text-sm font-bold text-ink">
+                &#127926; Real-Time Vibe Matches
+              </h4>
+              <span
+                id="vibe-match-count"
+                class="rounded-full bg-tide/10 px-2.5 py-0.5 text-[10px] font-bold text-tide"
+                >0 tracks matched</span
+              >
+            </div>
+
+            <div id="vibe-matches-container" class="space-y-4">
+              <p class="text-center text-xs text-ink/40 py-8 italic">
+                Adjust sliders or search a vibe to generate recommendations...
+              </p>
+            </div>
+          </div>
+
+          <!-- Profile-Alone Core Taste Recommendations (Unlocked state) -->
+          <div class="rounded-3xl border border-ink/10 bg-white/50 p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-4 border-b border-ink/10 pb-2">
+              <div>
+                <h4 class="text-sm font-bold text-ink flex items-center gap-1.5">
+                  <span>🎯</span> Core Profile Matches (Pure Taste)
+                </h4>
+                <p class="text-[10px] text-ink/50 mt-0.5">
+                  Recommendations derived purely from your active profile preferences.
+                </p>
+              </div>
+              <span class="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-600">
+                {{ profile_alone_songs|length }} tracks
+              </span>
+            </div>
+
+            <div class="space-y-4">
+              {% if profile_alone_songs %}
+                {% for song in profile_alone_songs %}
+                  {% set favorite_key = (song.trackName ~ '||' ~ song.artistName)|lower %}
+                  {% set is_favorite = favorite_key in favorite_recommendation_keys %}
+                  <article class="rise group relative overflow-hidden rounded-2xl border border-ink/10 bg-white/85 p-4 shadow-md backdrop-blur transition hover:-translate-y-0.5 hover:shadow-float">
+                    <div class="flex items-center gap-3">
+                      <div class="relative h-12 w-12 shrink-0 rounded-xl shadow-md" style="background-color: {{ song.color }}">
+                        <svg viewBox="0 0 64 64" fill="none" class="absolute inset-0 h-full w-full p-2.5 opacity-40">
+                          <circle cx="32" cy="32" r="12" stroke="white" stroke-width="4"/>
+                          <circle cx="32" cy="32" r="4" fill="white"/>
+                          <line x1="44" y1="20" x2="52" y2="14" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                          <line x1="44" y1="14" x2="52" y2="14" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                          <line x1="52" y1="14" x2="52" y2="26" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                        </svg>
+                        <span class="absolute -bottom-1.5 -right-1.5 rounded-full bg-sun px-1 py-0.5 text-[8px] font-extrabold text-ink shadow-sm">{{ song.match }}%</span>
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <p class="truncate font-display text-xs font-bold text-ink">{{ song.trackName }}</p>
+                        <p class="truncate text-[10px] text-ink/60">{{ song.artistName }}</p>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                          <span class="inline-block rounded-full border px-1.5 py-0.2 text-[8px] font-semibold uppercase tracking-wide" style="border-color: {{ song.color }}40; color: {{ song.color }}; background-color: {{ song.color }}15">
+                            {{ song.genre }}
+                          </span>
+                          <span class="text-[9px] text-ink/40">{{ song.tempo_bpm }} bpm</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {% if song.spotify_embed_url %}
+                    <div class="mt-2.5">
+                      <iframe src="{{ song.spotify_embed_url }}" width="100%" height="80" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" class="rounded-xl"></iframe>
+                    </div>
+                    {% endif %}
+                    
+                    <form action="{{ url_for('add_favorite_recommendation') }}" method="post" class="flex justify-end mt-2">
+                      <input type="hidden" name="track_name" value="{{ song.trackName }}" />
+                      <input type="hidden" name="artist_name" value="{{ song.artistName }}" />
+                      <input type="hidden" name="genre" value="{{ song.genre }}" />
+                      <input type="hidden" name="spotify_url" value="{{ song.spotify_url }}" />
+                      <input type="hidden" name="color" value="{{ song.color }}" />
+                      <input type="hidden" name="match_score" value="{{ song.match }}" />
+                      <input type="hidden" name="source_type" value="vibe_profile" />
+                      <input type="hidden" name="source_label" value="Profile vibe matches" />
+                      <button type="submit" class="rounded-lg border px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] {% if is_favorite %}border-emerald-300 bg-emerald-50 text-emerald-700{% else %}border-tide/30 bg-white text-tide hover:bg-tide/10{% endif %}" {% if is_favorite %}disabled{% endif %}>
+                        {% if is_favorite %}✓ Approved{% else %}Approve{% endif %}
+                      </button>
+                    </form>
+                  </article>
+                {% endfor %}
+              {% else %}
+                <p class="text-center text-xs text-ink/40 py-8 italic">No profile recommendations found.</p>
+              {% endif %}
+            </div>
+        </div>
+      </div>
+      </div> <!-- End #vibe-matcher-unlocked-grid -->
+
+      <!-- Locked View -->
+      <div id="vibe-matcher-locked-panel" class="{% if prefs and prefs.enable_acoustic_matcher %}hidden{% endif %} space-y-6">
+          <!-- High-Fidelity Locked Placeholder -->
+          <div
+            class="my-6 rounded-3xl border border-dashed border-ink/20 bg-ink/[0.01] p-8 text-center shadow-inner backdrop-blur-sm relative overflow-hidden"
+          >
+            <div
+              class="absolute -right-24 -top-24 w-48 h-48 rounded-full bg-deep/5 blur-3xl"
+            ></div>
+            <div
+              class="absolute -left-24 -bottom-24 w-48 h-48 rounded-full bg-sun/5 blur-3xl"
+            ></div>
+
+            <div class="space-y-5 py-4">
+              <div
+                class="w-16 h-16 rounded-3xl bg-tide/10 flex items-center justify-center text-3xl mx-auto shadow-sm text-tide border border-tide/20"
+              >
+                🔒
+              </div>
+
+              <div class="max-w-md mx-auto">
+                <h4
+                  class="text-lg font-extrabold text-ink tracking-tight font-display"
+                >
+                  Acoustic Vibe-Vector Matcher is Locked
+                </h4>
+                <p class="text-xs text-ink/50 leading-relaxed mt-2">
+                  Unlock interactive 5D Cosine Similarity recommendation
+                  searches, reference track syncs, and manual vibe tuning
+                  sliders by activating this feature in your campaign taste
+                  profile.
+                </p>
+              </div>
+
+              <div class="pt-2">
+                <a
+                  href="{{ url_for('profile', enterprise='true') }}"
+                  class="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-deep to-tide hover:from-[#1859a5] hover:to-deep px-6 py-3.5 text-xs font-extrabold uppercase tracking-wider text-white shadow-lg shadow-tide/25 transform hover:scale-[1.01] transition-all"
+                >
+                  👉 Enable in Profile Preferences
+                </a>
+              </div>
+
+              <p class="text-[10px] text-ink/40 italic">
+                Tip: This is a customizable campaign tool that can be enabled or
+                disabled per brand profile.
+              </p>
+            </div>
+          </div>
+
+          <!-- Profile-Alone Core Taste Recommendations (Locked state) -->
+          <div class="mt-8 border-t border-ink/10 pt-6">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h4 class="text-sm font-bold text-ink flex items-center gap-1.5">
+                  <span>🎯</span> Core Profile Matches (Pure Taste)
+                </h4>
+                <p class="text-[11px] text-ink/50 mt-0.5">
+                  These recommendations are calculated strictly from your active brand profile preferences.
+                </p>
+              </div>
+              <span class="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-600">
+                {{ profile_alone_songs|length }} tracks
+              </span>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+              {% if profile_alone_songs %}
+                {% for song in profile_alone_songs %}
+                  {% set favorite_key = (song.trackName ~ '||' ~ song.artistName)|lower %}
+                  {% set is_favorite = favorite_key in favorite_recommendation_keys %}
+                  <article class="rise group relative overflow-hidden rounded-2xl border border-ink/10 bg-white/85 p-4 shadow-md backdrop-blur transition hover:-translate-y-0.5 hover:shadow-float">
+                    <div class="flex items-center gap-3">
+                      <div class="relative h-12 w-12 shrink-0 rounded-xl shadow-md" style="background-color: {{ song.color }}">
+                        <svg viewBox="0 0 64 64" fill="none" class="absolute inset-0 h-full w-full p-2.5 opacity-40">
+                          <circle cx="32" cy="32" r="12" stroke="white" stroke-width="4"/>
+                          <circle cx="32" cy="32" r="4" fill="white"/>
+                          <line x1="44" y1="20" x2="52" y2="14" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                          <line x1="44" y1="14" x2="52" y2="14" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                          <line x1="52" y1="14" x2="52" y2="26" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                        </svg>
+                        <span class="absolute -bottom-1.5 -right-1.5 rounded-full bg-sun px-1 py-0.5 text-[8px] font-extrabold text-ink shadow-sm">{{ song.match }}%</span>
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <p class="truncate font-display text-xs font-bold text-ink">{{ song.trackName }}</p>
+                        <p class="truncate text-[10px] text-ink/60">{{ song.artistName }}</p>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                          <span class="inline-block rounded-full border px-1.5 py-0.2 text-[8px] font-semibold uppercase tracking-wide" style="border-color: {{ song.color }}40; color: {{ song.color }}; background-color: {{ song.color }}15">
+                            {{ song.genre }}
+                          </span>
+                          <span class="text-[9px] text-ink/40">{{ song.tempo_bpm }} bpm</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {% if song.spotify_embed_url %}
+                    <div class="mt-2.5">
+                      <iframe src="{{ song.spotify_embed_url }}" width="100%" height="80" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" class="rounded-xl"></iframe>
+                    </div>
+                    {% endif %}
+                    
+                    <form action="{{ url_for('add_favorite_recommendation') }}" method="post" class="flex justify-end mt-2">
+                      <input type="hidden" name="track_name" value="{{ song.trackName }}" />
+                      <input type="hidden" name="artist_name" value="{{ song.artistName }}" />
+                      <input type="hidden" name="genre" value="{{ song.genre }}" />
+                      <input type="hidden" name="spotify_url" value="{{ song.spotify_url }}" />
+                      <input type="hidden" name="color" value="{{ song.color }}" />
+                      <input type="hidden" name="match_score" value="{{ song.match }}" />
+                      <input type="hidden" name="source_type" value="vibe_profile" />
+                      <input type="hidden" name="source_label" value="Profile vibe matches" />
+                      <button type="submit" class="rounded-lg border px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.1em] {% if is_favorite %}border-emerald-300 bg-emerald-50 text-emerald-700{% else %}border-tide/30 bg-white text-tide hover:bg-tide/10{% endif %}" {% if is_favorite %}disabled{% endif %}>
+                        {% if is_favorite %}✓ Approved{% else %}Approve{% endif %}
+                      </button>
+                    </form>
+                  </article>
+                {% endfor %}
+              {% else %}
+                <p class="text-center text-xs text-ink/40 py-8 italic col-span-2">No profile recommendations found.</p>
+              {% endif %}
+            </div>
+          </div>
+      </div> <!-- End #vibe-matcher-locked-panel -->
+        </section>
+      </div>
+
+      </div>
+    </div>
+
+    <div class="space-y-6">
+      <!-- 🌟 Campaign Branding Starters (Approved Tracks) -->
+      <section class="rise rounded-3xl border border-ink/10 bg-white/80 p-6 shadow-float backdrop-blur animate-rise" style="animation-delay: 100ms">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-xl">✨</span>
+          <div>
+            <h3 class="font-display text-xs font-bold uppercase tracking-[0.2em] text-tide">Branding Starters</h3>
+            <h4 class="text-sm font-bold text-ink mt-0.5">Approved Campaign Tracks</h4>
+          </div>
+        </div>
+        
+        <p class="text-[11px] text-ink/50 leading-relaxed mb-4">
+          These are the verified tracks approved by your team during live campaign debates. Use them to establish your brand's sonic identity!
+        </p>
+
+        <div class="space-y-4 max-h-[300px] overflow-y-auto pr-1">
+          {% if rooms_with_approvals %}
+            {% for item in rooms_with_approvals %}
+              <div class="rounded-2xl border border-ink/5 bg-ink/[0.01] p-3.5 space-y-2">
+                <div class="flex items-center justify-between border-b border-ink/5 pb-2">
+                  <a href="{{ url_for('campaign_room', room_id=item.room.id) }}" class="text-xs font-extrabold text-deep hover:text-tide hover:underline truncate max-w-[180px]">
+                    {{ item.room.name }}
+                  </a>
+                  <span class="text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                    {{ item.tracks|length }} approved
+                  </span>
+                </div>
+                <div class="space-y-3 pt-1">
+                  {% for song in item.tracks %}
+                    <div class="flex flex-col gap-2 border-b border-ink/5 pb-2 last:border-none last:pb-0">
+                      <div class="flex items-center justify-between text-xs gap-2">
+                        <div class="min-w-0">
+                          <p class="font-bold text-ink truncate leading-tight">{{ song.trackName }}</p>
+                          <p class="text-[9px] text-ink/40 truncate leading-tight">{{ song.artistName }}</p>
+                        </div>
+                        <span class="text-[9px] shrink-0 text-ink/40 bg-ink/5 px-1.5 py-0.5 rounded font-mono">
+                          {{ song.genre }}
+                        </span>
+                      </div>
+                      {% if song.spotify_embed_url %}
+                      <div class="w-full rounded-xl overflow-hidden bg-black/5 shrink-0">
+                        <iframe src="{{ song.spotify_embed_url }}" width="100%" height="80" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="border-radius: 12px"></iframe>
+                      </div>
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="flex flex-col items-center justify-center py-8 text-center border border-dashed border-ink/10 rounded-2xl p-4 bg-ink/[0.01]">
+              <span class="text-2xl mb-2">🎵</span>
+              <p class="text-xs text-ink/40 italic">
+                No approved tracks yet. Join a campaign room and approve tracks to kickstart your branding ideas!
+              </p>
+            </div>
+          {% endif %}
+        </div>
+      </section>
+
+      {% include "_social_sidebar.html" %}
+    </div>
   </div>
 
   {% include "_community_section.html" %}
-
 </main>
 {% include "_convos_widget.html" %}
+<script
+  src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+  crossorigin="anonymous"
+></script>
 <script>
   (function () {
     document.querySelectorAll('[data-animation-delay]').forEach((element) => {
@@ -68,6 +1782,104 @@
     document.querySelectorAll('[data-card-tint]').forEach((element) => {
       element.style.backgroundColor = `${element.dataset.cardTint}12`;
     });
+
+    document.querySelectorAll('[data-mood-card="true"]').forEach((element) => {
+      if (element.dataset.moodActive === '1') {
+        const color = element.dataset.moodColor;
+        element.style.color = color;
+        element.style.backgroundColor = `${color}08`;
+      }
+    });
+
+    document.querySelectorAll('[data-mood-banner="true"]').forEach((element) => {
+      const color = element.dataset.moodColor;
+      element.style.borderColor = `${color}30`;
+      element.style.backgroundColor = `${color}08`;
+    });
+
+    document.querySelectorAll('[data-mood-text="true"]').forEach((element) => {
+      element.style.color = element.dataset.moodColor;
+    });
+
+    document.querySelectorAll('[data-history-chip="true"]').forEach((element) => {
+      element.style.backgroundColor = `${element.dataset.moodColor}15`;
+    });
+
+    const mainMenuTrigger = document.getElementById('main-menu-trigger');
+    const mainMenuPanel = document.getElementById('main-menu-panel');
+    function setMainMenuOpen(isOpen) {
+      if (!mainMenuPanel) return;
+      mainMenuPanel.classList.toggle('hidden', !isOpen);
+    }
+    if (mainMenuTrigger && mainMenuPanel) {
+      mainMenuTrigger.addEventListener('click', (event) => {
+        event.stopPropagation();
+        setMainMenuOpen(mainMenuPanel.classList.contains('hidden'));
+        setWorkspaceOpen(false); // Close workspace dropdown if open
+      });
+      mainMenuPanel.addEventListener('click', (event) => {
+        event.stopPropagation();
+      });
+      document.addEventListener('click', () => setMainMenuOpen(false));
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          setMainMenuOpen(false);
+        }
+      });
+    }
+
+    // Collaborative Workspace Dropdown Trigger
+    const workspaceTrigger = document.getElementById('workspace-trigger');
+    const workspacePanel = document.getElementById('workspace-dropdown-panel');
+    function setWorkspaceOpen(isOpen) {
+      if (!workspacePanel) return;
+      workspacePanel.classList.toggle('hidden', !isOpen);
+    }
+    if (workspaceTrigger && workspacePanel) {
+      workspaceTrigger.addEventListener('click', (event) => {
+        event.stopPropagation();
+        setWorkspaceOpen(workspacePanel.classList.contains('hidden'));
+        setMainMenuOpen(false); // Close main menu if open
+      });
+      workspacePanel.addEventListener('click', (event) => {
+        event.stopPropagation();
+      });
+      document.addEventListener('click', () => setWorkspaceOpen(false));
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          setWorkspaceOpen(false);
+        }
+      });
+    }
+
+
+    const socialDrawer = document.getElementById('social-drawer');
+    const socialDrawerPanel = document.getElementById('social-drawer-panel');
+    const socialDrawerBackdrop = document.getElementById('social-drawer-backdrop');
+    const socialDrawerTrigger = document.getElementById('social-drawer-trigger');
+    const socialDrawerClose = document.getElementById('social-drawer-close');
+
+    function setSocialDrawerOpen(isOpen) {
+      if (!socialDrawer || !socialDrawerPanel || !socialDrawerBackdrop) return;
+      socialDrawer.classList.toggle('pointer-events-none', !isOpen);
+      socialDrawer.classList.toggle('pointer-events-auto', isOpen);
+      socialDrawerBackdrop.classList.toggle('opacity-0', !isOpen);
+      socialDrawerBackdrop.classList.toggle('opacity-100', isOpen);
+      socialDrawerPanel.classList.toggle('translate-x-full', !isOpen);
+      socialDrawerPanel.classList.toggle('translate-x-0', isOpen);
+    }
+
+    if (socialDrawerTrigger) {
+      socialDrawerTrigger.addEventListener('click', () => setSocialDrawerOpen(true));
+    }
+
+    if (socialDrawerBackdrop) {
+      socialDrawerBackdrop.addEventListener('click', () => setSocialDrawerOpen(false));
+    }
+
+    if (socialDrawerClose) {
+      socialDrawerClose.addEventListener('click', () => setSocialDrawerOpen(false));
+    }
 
     const convosToggle = document.getElementById('convos-toggle');
     const convosPanel = document.getElementById('convos-panel');
@@ -109,6 +1921,1056 @@
         setNewConversationOpen(currentlyHidden);
       });
     }
+
+    // Room creation modal logic
+    const roomCreateModal = document.getElementById('room-create-modal');
+    const roomCreateForm = document.getElementById('room-create-form');
+    const roomCreateMoodKey = document.getElementById('room-create-mood-key');
+    const roomCreateNameInput = document.getElementById('room-create-name-input');
+    const roomCreateMoodLabel = document.getElementById('room-create-mood-label');
+    const closeRoomCreateModal = document.getElementById('close-room-create-modal');
+
+    function openNamingModal(moodKey, moodLabel) {
+      if (!roomCreateModal || !roomCreateMoodKey || !roomCreateNameInput || !roomCreateMoodLabel) return;
+      roomCreateMoodKey.value = moodKey;
+      roomCreateMoodLabel.textContent = moodLabel;
+      roomCreateNameInput.value = moodLabel; // Default to mood label
+      roomCreateModal.classList.remove('hidden');
+      requestAnimationFrame(() => roomCreateNameInput.select());
+    }
+
+    document.querySelectorAll('#open-room-create-modal, .open-room-create-modal').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openNamingModal(btn.dataset.moodKey, btn.dataset.moodLabel);
+      });
+    });
+
+    if (closeRoomCreateModal) {
+      closeRoomCreateModal.addEventListener('click', () => roomCreateModal.classList.add('hidden'));
+    }
+
+    if (roomCreateModal) {
+      roomCreateModal.addEventListener('click', (e) => {
+        if (e.target === roomCreateModal) roomCreateModal.classList.add('hidden');
+      });
+    }
+
+    // Real-time updates and dashboard renaming
+    let socket = null;
+    function connectSocket() {
+      if (typeof io !== 'function') return;
+      socket = io();
+      socket.on('room:renamed', (p) => {
+        const labels = document.querySelectorAll(`.room-name-${p.room_id}`);
+        labels.forEach(l => { l.textContent = p.new_name; });
+      });
+    }
+    connectSocket();
+
+    const dashboardRenameModal = document.getElementById('dashboard-rename-modal');
+    const dashboardRenameForm = document.getElementById('dashboard-rename-form');
+    const dashboardRenameInput = document.getElementById('dashboard-rename-input');
+    const dashboardRenameRoomId = document.getElementById('dashboard-rename-room-id');
+    const closeDashboardRenameModal = document.getElementById('close-dashboard-rename-modal');
+
+    document.querySelectorAll('.dashboard-rename-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dashboardRenameRoomId.value = btn.dataset.roomId;
+        dashboardRenameInput.value = btn.dataset.roomName;
+        dashboardRenameModal.classList.remove('hidden');
+        requestAnimationFrame(() => dashboardRenameInput.select());
+      });
+    });
+
+    if (closeDashboardRenameModal) {
+      closeDashboardRenameModal.addEventListener('click', () => dashboardRenameModal.classList.add('hidden'));
+    }
+
+    if (dashboardRenameModal) {
+      dashboardRenameModal.addEventListener('click', (e) => {
+        if (e.target === dashboardRenameModal) dashboardRenameModal.classList.add('hidden');
+      });
+    }
+
+    if (dashboardRenameForm) {
+      dashboardRenameForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const roomId = dashboardRenameRoomId.value;
+        const newName = dashboardRenameInput.value.trim();
+        if (!newName) return;
+
+        try {
+          const formData = new FormData();
+          formData.append('name', newName);
+          const resp = await fetch(`/room/${roomId}/rename`, { method: 'POST', body: formData });
+          const data = await resp.json();
+          if (data.ok) {
+            dashboardRenameModal.classList.add('hidden');
+            // Socket will update the UI
+          } else {
+            alert(data.error || "Failed to rename room.");
+          }
+        } catch (err) {
+          alert("Error connecting to server.");
+        }
+      });
+    }
+
+    // Toggle campaign ongoing status
+    document.querySelectorAll('.toggle-ongoing-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const roomId = btn.dataset.roomId;
+        try {
+          const resp = await fetch(`/room/${roomId}/toggle-ongoing`, { method: 'POST' });
+          const data = await resp.json();
+          if (data.ok) {
+            window.location.reload();
+          } else {
+            alert(data.error || "Failed to update campaign status.");
+          }
+        } catch (err) {
+          alert("Error connecting to server.");
+        }
+      });
+    });
   })();
+
+  function showUpgradeModal() {
+    const modal = document.getElementById('premium-upgrade-modal');
+    if (modal) modal.classList.remove('hidden');
+  }
+  function hideUpgradeModal() {
+    const modal = document.getElementById('premium-upgrade-modal');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  // ──────────── Acoustic Vibe Curation Engine ────────────
+  let dashboardActiveTab = 'brief';
+  let vibeDebounceTimer = null;
+  let hasLoadedVibeTab = false;
+
+
+  function switchDashboardTab(tab) {
+    if (tab === dashboardActiveTab) return;
+    dashboardActiveTab = tab;
+
+    const briefBtn = document.getElementById('tab-brief-btn');
+    const vibeBtn = document.getElementById('tab-vibe-btn');
+    const briefContent = document.getElementById('tab-brief-content');
+    const vibeContent = document.getElementById('tab-vibe-content');
+
+    const activeClasses = ['bg-gradient-to-r', 'from-deep', 'to-tide', 'text-white', 'shadow-md', 'shadow-tide/20'];
+    const inactiveClasses = ['text-ink/60', 'hover:text-ink', 'hover:bg-ink/[0.03]'];
+
+    // Reset all buttons
+    [briefBtn, vibeBtn].forEach(btn => {
+      if (btn) {
+        btn.classList.remove(...activeClasses);
+        btn.classList.add(...inactiveClasses);
+      }
+    });
+
+    // Reset all contents
+    [briefContent, vibeContent].forEach(content => {
+      if (content) {
+        content.classList.remove('block');
+        content.classList.add('hidden');
+      }
+    });
+
+    if (tab === 'brief') {
+      briefBtn.classList.remove(...inactiveClasses);
+      briefBtn.classList.add(...activeClasses);
+      briefContent.classList.remove('hidden');
+      briefContent.classList.add('block');
+    } else if (tab === 'vibe') {
+      vibeBtn.classList.remove(...inactiveClasses);
+      vibeBtn.classList.add(...activeClasses);
+      vibeContent.classList.remove('hidden');
+      vibeContent.classList.add('block');
+
+      if (!hasLoadedVibeTab) {
+        hasLoadedVibeTab = true;
+        fetchVibeRecommendations();
+      }
+    }
+  }
+
+  function debounceVibeRecommendations() {
+    if (vibeDebounceTimer) clearTimeout(vibeDebounceTimer);
+    vibeDebounceTimer = setTimeout(fetchVibeRecommendations, 250);
+  }
+
+  async function fetchVibeRecommendations() {
+    const loader = document.getElementById('vibe-loader');
+    const container = document.getElementById('vibe-matches-container');
+    const matchCountBadge = document.getElementById('vibe-match-count');
+
+    const danceSlider = document.getElementById('vibe_dance');
+    if (!danceSlider) return; // Safely return if the vibe matcher is locked
+
+    const danceability = parseFloat(danceSlider.value);
+    const energy = parseFloat(document.getElementById('vibe_energy').value);
+    const valence = parseFloat(document.getElementById('vibe_valence').value);
+    const acousticness = parseFloat(document.getElementById('vibe_acoustic').value);
+    const instrumentalness = parseFloat(document.getElementById('vibe_instrumental').value);
+
+    const w_danceability = parseFloat(document.getElementById('vibe_w_danceability')?.value || 1.0);
+    const w_energy = parseFloat(document.getElementById('vibe_w_energy')?.value || 1.0);
+    const w_valence = parseFloat(document.getElementById('vibe_w_valence')?.value || 1.0);
+    const w_acousticness = parseFloat(document.getElementById('vibe_w_acousticness')?.value || 1.0);
+    const w_instrumentalness = parseFloat(document.getElementById('vibe_w_instrumentalness')?.value || 1.0);
+
+    const interaction_blend = parseFloat(document.getElementById('vibe_interaction_blend')?.value || 0.65);
+    const genre_boost_weight = parseFloat(document.getElementById('vibe_genre_boost_weight')?.value || 1.0);
+
+    if (loader) {
+      loader.classList.remove('hidden');
+      loader.classList.add('flex');
+    }
+
+    try {
+      const response = await fetch('/api/recommendations/vibe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          danceability: danceability,
+          energy: energy,
+          valence: valence,
+          acousticness: acousticness,
+          instrumentalness: instrumentalness,
+          weight_danceability: w_danceability,
+          weight_energy: w_energy,
+          weight_valence: w_valence,
+          weight_acousticness: w_acousticness,
+          weight_instrumentalness: w_instrumentalness,
+          interaction_blend: interaction_blend,
+          genre_boost_weight: genre_boost_weight,
+          n: 5
+        })
+      });
+      const data = await response.json();
+
+      if (loader) {
+        loader.classList.remove('flex');
+        loader.classList.add('hidden');
+      }
+
+      if (data.status === 'success' && data.tracks) {
+        const tracks = data.tracks;
+        if (matchCountBadge) {
+          matchCountBadge.textContent = `${tracks.length} tracks matched`;
+        }
+
+        if (tracks.length === 0) {
+          container.innerHTML = `<p class="text-center text-xs text-ink/40 py-8 italic">No matching tracks found in library.</p>`;
+          return;
+        }
+
+        let html = '';
+        tracks.forEach((song, idx) => {
+          const closenessDance = Math.round((1.0 - Math.abs(danceability - song.danceability)) * 100);
+          const closenessEnergy = Math.round((1.0 - Math.abs(energy - song.energy)) * 100);
+          const closenessValence = Math.round((1.0 - Math.abs(valence - song.valence)) * 100);
+          const closenessAcoustic = Math.round((1.0 - Math.abs(acousticness - song.acousticness)) * 100);
+          const closenessInstrumental = Math.round((1.0 - Math.abs(instrumentalness - song.instrumentalness)) * 100);
+
+          const isFavorite = song.is_favorite;
+
+          html += `
+            <article class="rise group relative overflow-hidden rounded-2xl border border-ink/10 bg-white/85 p-4 shadow-md backdrop-blur transition hover:-translate-y-0.5 hover:shadow-float animate-rise" style="animation-delay: ${idx * 40}ms">
+              <div class="flex items-center gap-4">
+                <div class="relative h-14 w-14 shrink-0 rounded-xl shadow-md" style="background-color: ${song.color}">
+                  <svg viewBox="0 0 64 64" fill="none" class="absolute inset-0 h-full w-full p-2.5 opacity-40">
+                    <circle cx="32" cy="32" r="12" stroke="white" stroke-width="4"/>
+                    <circle cx="32" cy="32" r="4" fill="white"/>
+                    <line x1="44" y1="20" x2="52" y2="14" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                    <line x1="44" y1="14" x2="52" y2="14" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                    <line x1="52" y1="14" x2="52" y2="26" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                  </svg>
+                  <span class="absolute -bottom-1.5 -right-1.5 rounded-full bg-sun px-1.5 py-0.5 text-[9px] font-extrabold text-ink shadow-sm">${song.match}%</span>
+                </div>
+
+                <div class="min-w-0 flex-1">
+                  <p class="truncate font-display text-sm font-bold text-ink">${song.trackName}</p>
+                  <p class="truncate text-xs text-ink/60">${song.artistName}</p>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span class="inline-block rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide" style="border-color: ${song.color}40; color: ${song.color}; background-color: ${song.color}15">
+                      ${song.genre}
+                    </span>
+                    <span class="rounded-full border border-ink/10 bg-ink/5 px-1.5 py-0.5 text-[9px] font-semibold text-ink/50">${song.tempo_bpm} bpm</span>
+                    <span class="rounded-full border border-ink/10 bg-ink/5 px-1.5 py-0.5 text-[9px] font-semibold text-ink/50">${song.duration_label}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Feature Overlap Match Progress Bars -->
+              <div class="mt-3 grid grid-cols-5 gap-1.5 border-t border-ink/5 pt-2 text-[8px] text-ink/40">
+                <div class="min-w-0">
+                  <div class="flex justify-between font-semibold"><span class="truncate" title="Groove Match (danceability)">💃 Groove</span><span>${closenessDance}%</span></div>
+                  <div class="h-1 w-full bg-ink/10 rounded-full mt-0.5 overflow-hidden"><div class="h-full bg-gradient-to-r from-deep to-tide" style="width: ${closenessDance}%"></div></div>
+                </div>
+                <div class="min-w-0">
+                  <div class="flex justify-between font-semibold"><span class="truncate" title="Intensity Match (energy)">⚡ Intensity</span><span>${closenessEnergy}%</span></div>
+                  <div class="h-1 w-full bg-ink/10 rounded-full mt-0.5 overflow-hidden"><div class="h-full bg-gradient-to-r from-deep to-tide" style="width: ${closenessEnergy}%"></div></div>
+                </div>
+                <div class="min-w-0">
+                  <div class="flex justify-between font-semibold"><span class="truncate" title="Tone Match (valence)">😊 Tone</span><span>${closenessValence}%</span></div>
+                  <div class="h-1 w-full bg-ink/10 rounded-full mt-0.5 overflow-hidden"><div class="h-full bg-gradient-to-r from-deep to-tide" style="width: ${closenessValence}%"></div></div>
+                </div>
+                <div class="min-w-0">
+                  <div class="flex justify-between font-semibold"><span class="truncate" title="Texture Match (acousticness)">🎻 Texture</span><span>${closenessAcoustic}%</span></div>
+                  <div class="h-1 w-full bg-ink/10 rounded-full mt-0.5 overflow-hidden"><div class="h-full bg-gradient-to-r from-deep to-tide" style="width: ${closenessAcoustic}%"></div></div>
+                </div>
+                <div class="min-w-0">
+                  <div class="flex justify-between font-semibold"><span class="truncate" title="Layer Match (instrumentalness)">🎹 Layer</span><span>${closenessInstrumental}%</span></div>
+                  <div class="h-1 w-full bg-ink/10 rounded-full mt-0.5 overflow-hidden"><div class="h-full bg-gradient-to-r from-deep to-tide" style="width: ${closenessInstrumental}%"></div></div>
+                </div>
+              </div>
+
+              <!-- Spotify Embed Playback -->
+              ${song.spotify_embed_url ? `
+              <div class="mt-3">
+                <iframe src="${song.spotify_embed_url}" width="100%" height="80" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" class="rounded-xl"></iframe>
+              </div>
+              ` : `
+              <div class="mt-2 text-center py-2 text-[9px] text-ink/30 italic">Spotify preview not available</div>
+              `}
+
+               <!-- Approval Action -->
+              <form action="/recommendations/favorites/add" method="post" class="flex justify-end mt-2">
+                <input type="hidden" name="track_name" value="${song.trackName}">
+                <input type="hidden" name="artist_name" value="${song.artistName}">
+                <input type="hidden" name="genre" value="${song.genre}">
+                <input type="hidden" name="spotify_url" value="${song.spotify_url}">
+                <input type="hidden" name="color" value="${song.color}">
+                <input type="hidden" name="match_score" value="${song.match}">
+                <input type="hidden" name="source_type" value="vibe">
+                <input type="hidden" name="source_label" value="Acoustic vibe matcher">
+                <button type="submit" class="rounded-lg border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.10em] ${isFavorite ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-tide/30 bg-white text-tide hover:bg-tide/10'}" ${isFavorite ? 'disabled' : ''}>
+                  ${isFavorite ? '✓ Approved' : 'Approve Track'}
+                </button>
+              </form>
+            </article>
+          `;
+        });
+        container.innerHTML = html;
+      } else {
+        container.innerHTML = `<p class="text-center text-xs text-ink/40 py-8 italic">Failed to calculate recommendations. Please check parameters.</p>`;
+      }
+    } catch (err) {
+      if (loader) {
+        loader.classList.remove('flex');
+        loader.classList.add('hidden');
+      }
+      container.innerHTML = `<p class="text-center text-xs text-ink/40 py-8 italic">Error connecting to recommendation service.</p>`;
+    }
+  }
+
+  // Floating save indicator styling helper
+  function updateSaveIndicator(state) {
+    const pill = document.getElementById('vibe-save-indicator');
+    const dot = document.getElementById('vibe-save-indicator-dot');
+    const txt = document.getElementById('vibe-save-indicator-text');
+    if (!pill) return;
+    
+    if (state === 'saving') {
+      pill.classList.remove('opacity-0');
+      pill.className = "transition-opacity duration-300 pointer-events-none rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 bg-slate-100 text-slate-600";
+      dot.className = "h-1.5 w-1.5 rounded-full bg-slate-400 animate-pulse";
+      txt.textContent = "Saving...";
+    } else if (state === 'saved') {
+      pill.classList.remove('opacity-0');
+      pill.className = "transition-opacity duration-300 pointer-events-none rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 bg-emerald-50 text-emerald-600";
+      dot.className = "h-1.5 w-1.5 rounded-full bg-emerald-500";
+      txt.textContent = "Saved";
+      setTimeout(() => {
+        if (txt.textContent === "Saved") {
+          pill.classList.add('opacity-0');
+        }
+      }, 2000);
+    } else if (state === 'error') {
+      pill.classList.remove('opacity-0');
+      pill.className = "transition-opacity duration-300 pointer-events-none rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 bg-rose-50 text-rose-600";
+      dot.className = "h-1.5 w-1.5 rounded-full bg-rose-500";
+      txt.textContent = "Save Error";
+    }
+  }
+
+  // Debounced auto-save function
+  let saveDebounceTimer = null;
+  function triggerAutoSave() {
+    if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
+    saveDebounceTimer = setTimeout(savePreferencesAJAX, 500);
+  }
+
+  async function savePreferencesAJAX() {
+    updateSaveIndicator('saving');
+    
+    const payload = {};
+    
+    // Select dropdowns
+    const indFocus = document.getElementById('vibe_industry_focus');
+    if (indFocus) payload['industry_focus'] = indFocus.value;
+    
+    const tarGen = document.getElementById('vibe_target_generation');
+    if (tarGen) payload['target_generation'] = tarGen.value;
+    
+    const tarCamp = document.getElementById('vibe_target_campaign');
+    if (tarCamp) payload['target_campaign'] = tarCamp.value;
+    
+    // Toggles
+    const useSignal = document.getElementById('vibe_use_interaction_signal');
+    if (useSignal) payload['use_interaction_signal'] = useSignal.checked;
+    
+    const enableSimilarity = document.getElementById('vibe_enable_personalized_similarity');
+    if (enableSimilarity) payload['enable_personalized_similarity'] = enableSimilarity.checked;
+    
+    const enableBoost = document.getElementById('vibe_enable_genre_boost');
+    if (enableBoost) payload['enable_genre_boost'] = enableBoost.checked;
+    
+    const enableMatcher = document.getElementById('vibe_enable_acoustic_matcher');
+    if (enableMatcher) payload['enable_acoustic_matcher'] = enableMatcher.checked;
+    
+    // Sliders
+    const dance = document.getElementById('vibe_dance');
+    if (dance) payload['pref_danceability'] = parseFloat(dance.value);
+    
+    const energy = document.getElementById('vibe_energy');
+    if (energy) payload['pref_energy'] = parseFloat(energy.value);
+    
+    const valence = document.getElementById('vibe_valence');
+    if (valence) payload['pref_valence'] = parseFloat(valence.value);
+    
+    const acoustic = document.getElementById('vibe_acoustic');
+    if (acoustic) payload['pref_acousticness'] = parseFloat(acoustic.value);
+    
+    const instrumental = document.getElementById('vibe_instrumental');
+    if (instrumental) payload['pref_instrumentalness'] = parseFloat(instrumental.value);
+    
+    // Weights
+    document.querySelectorAll('[id^="vibe_w_"]').forEach(el => {
+      const key = el.id.replace('vibe_w_', '');
+      payload[`weight_${key}`] = parseFloat(el.value);
+    });
+    
+    // Multi-Vector Weights
+    const wBase = document.getElementById('vibe_weight_base_audio');
+    if (wBase) payload['weight_base_audio'] = parseFloat(wBase.value);
+    
+    const wInd = document.getElementById('vibe_weight_industry');
+    if (wInd) payload['weight_industry'] = parseFloat(wInd.value);
+    
+    const wGen = document.getElementById('vibe_weight_generation');
+    if (wGen) payload['weight_generation'] = parseFloat(wGen.value);
+    
+    const wCamp = document.getElementById('vibe_weight_campaign');
+    if (wCamp) payload['weight_campaign'] = parseFloat(wCamp.value);
+    
+    // Textarea
+    const notesText = document.getElementById('vibe_personalized_similarity_text');
+    if (notesText) payload['personalized_similarity_text'] = notesText.value;
+    
+    // Sliders for blend & boost
+    const blend = document.getElementById('vibe_interaction_blend');
+    if (blend) payload['interaction_blend'] = parseFloat(blend.value);
+    
+    const boost = document.getElementById('vibe_genre_boost_weight');
+    if (boost) payload['genre_boost_weight'] = parseFloat(boost.value);
+    
+    // Genres
+    const checkedGenres = Array.from(document.querySelectorAll('.vibe-genre-checkbox:checked')).map(cb => cb.value);
+    payload['genres'] = checkedGenres;
+    
+    try {
+      const res = await fetch('/api/profile/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        updateSaveIndicator('saved');
+        // If acoustic matcher is explicitly disabled, toggle the lock view!
+        if (enableMatcher && !enableMatcher.checked) {
+          // Transition to locked view
+          document.getElementById('vibe-matcher-unlocked-grid')?.classList.add('hidden');
+          document.getElementById('vibe-matcher-locked-panel')?.classList.remove('hidden');
+        }
+      } else {
+        updateSaveIndicator('error');
+      }
+    } catch (err) {
+      console.error(err);
+      updateSaveIndicator('error');
+    }
+  }
+
+  // Bind sliders dynamic output updates, save, and real-time search trigger immediately
+  document.querySelectorAll('.vibe-slider, .vibe-save-input').forEach(el => {
+    const eventType = (el.tagName === 'SELECT' || el.type === 'checkbox') ? 'change' : 'input';
+    el.addEventListener(eventType, () => {
+      triggerAutoSave();
+      
+      // If a slider changes, update its textual indicator
+      if (el.type === 'range') {
+        const outId = `${el.id}_val`;
+        const output = document.getElementById(outId);
+        if (output) {
+          output.textContent = parseFloat(el.value).toFixed(2);
+        }
+      }
+      
+      // If it's one of the main matching sliders, or weights, trigger real-time recommendations query
+      if (el.id.startsWith('vibe_') || el.classList.contains('vibe-slider')) {
+        debounceVibeRecommendations();
+      }
+    });
+  });
+
+  // Direct AJAX Unlock Mechanism
+  const unlockBtn = document.getElementById('vibe-unlock-btn');
+  if (unlockBtn) {
+    unlockBtn.addEventListener('click', async () => {
+      unlockBtn.disabled = true;
+      unlockBtn.textContent = "🔓 Enabling Matcher...";
+      try {
+        const res = await fetch('/api/profile/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enable_acoustic_matcher: true })
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          // Transition views
+          document.getElementById('vibe-matcher-locked-panel')?.classList.add('hidden');
+          document.getElementById('vibe-matcher-unlocked-grid')?.classList.remove('hidden');
+          // Update the checkbox value inside Card 5 so it is synced
+          const matcherCheckbox = document.getElementById('vibe_enable_acoustic_matcher');
+          if (matcherCheckbox) matcherCheckbox.checked = true;
+          // Trigger first recommendation fetch
+          fetchVibeRecommendations();
+        } else {
+          alert("Failed to enable the Matcher. Please try again.");
+          unlockBtn.disabled = false;
+          unlockBtn.textContent = "🔓 Unlock & Enable Matcher";
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Failed to connect to backend server.");
+        unlockBtn.disabled = false;
+        unlockBtn.textContent = "🔓 Unlock & Enable Matcher";
+      }
+    });
+  }
+
+  // Genre selection and chips logic for dashboard vibe matcher
+  (function () {
+    const searchInput = document.getElementById("vibe_genre_search");
+    const optionLabels = Array.from(document.querySelectorAll(".vibe-genre-option"));
+    const checkboxes = Array.from(document.querySelectorAll(".vibe-genre-checkbox"));
+    const optionsContainer = document.getElementById("vibe_genre_options");
+    const chipsWrap = document.getElementById("vibe_selected_genres_chips");
+    const selectedCount = document.getElementById("vibe_selected_count");
+    const emptyState = document.getElementById("vibe_genre_empty_state");
+    let lockedPageScrollY = null;
+
+    if (!searchInput || !optionsContainer || !chipsWrap) return;
+
+    optionLabels.forEach((label) => {
+      label.addEventListener("pointerdown", () => {
+        lockedPageScrollY = window.scrollY;
+      });
+    });
+
+    function refreshSelectedChips(preserveScroll = true) {
+      const pageScrollY =
+        lockedPageScrollY !== null ? lockedPageScrollY : window.scrollY;
+      const listScrollY = optionsContainer ? optionsContainer.scrollTop : 0;
+      const selected = checkboxes.filter((cb) => cb.checked);
+      chipsWrap.innerHTML = "";
+
+      selected.forEach((cb) => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className =
+          "inline-flex items-center gap-2 rounded-full border border-deep/25 bg-white px-2.5 py-0.5 text-xs font-semibold text-deep hover:bg-deep/10";
+        chip.textContent = cb.value;
+
+        const remove = document.createElement("span");
+        remove.textContent = "x";
+        remove.className = "text-[11px] font-bold text-deep/70";
+        chip.appendChild(remove);
+
+        chip.addEventListener("click", () => {
+          cb.checked = false;
+          refreshSelectedChips();
+          triggerAutoSave();
+          debounceVibeRecommendations();
+        });
+        chipsWrap.appendChild(chip);
+      });
+
+      selectedCount.textContent = `${selected.length} selected`;
+
+      if (preserveScroll) {
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: pageScrollY, behavior: "auto" });
+          if (optionsContainer) {
+            optionsContainer.scrollTop = listScrollY;
+          }
+          lockedPageScrollY = null;
+        });
+      }
+    }
+
+    function applyFilter() {
+      const q = (searchInput.value || "").trim().toLowerCase();
+      let visible = 0;
+      optionLabels.forEach((label) => {
+        const genre = label.dataset.genre || "";
+        const match = genre.includes(q);
+        label.classList.toggle("hidden", !match);
+        if (match) visible += 1;
+      });
+      emptyState.classList.toggle("hidden", visible > 0);
+    }
+
+    checkboxes.forEach((cb) =>
+      cb.addEventListener("change", () => {
+        refreshSelectedChips();
+        triggerAutoSave();
+        debounceVibeRecommendations();
+      })
+    );
+    searchInput.addEventListener("input", applyFilter);
+
+    refreshSelectedChips(false);
+    applyFilter();
+  })();
+
+  // 2. Vibe Semantic Sync Button click
+  const syncBtn = document.getElementById('vibe-sync-btn');
+  const searchInput = document.getElementById('vibe-search-input');
+  if (syncBtn && searchInput) {
+    async function runVibeSync() {
+      const text = (searchInput.value || '').trim();
+      if (!text) return;
+
+      const loader = document.getElementById('vibe-loader');
+      if (loader) {
+        loader.classList.remove('hidden');
+        loader.classList.add('flex');
+      }
+
+      // 1. Try to search the database first for a direct or partial song/artist match
+      try {
+        const res = await fetch('/api/songs/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: text })
+        });
+        const data = await res.json();
+
+        if (data.status === 'success' && data.match_found && data.song) {
+          const song = data.song;
+          // Found a direct song reference! Synchronize the sliders to match the acoustic signature of the song
+          animateSlidersTo(song.danceability, song.energy, song.valence, song.acousticness, song.instrumentalness);
+
+          // Show a beautiful premium notification inside the input placeholder or alert
+          const oldPlaceholder = searchInput.placeholder;
+          searchInput.value = `🎵 USense Sync: Matched reference track "${song.trackName}" by ${song.artistName}!`;
+          searchInput.classList.add('text-emerald-600', 'font-semibold');
+          setTimeout(() => {
+            searchInput.value = '';
+            searchInput.placeholder = oldPlaceholder;
+            searchInput.classList.remove('text-emerald-600', 'font-semibold');
+          }, 3000);
+
+          if (loader) {
+            loader.classList.remove('flex');
+            loader.classList.add('hidden');
+          }
+          return;
+        }
+      } catch (err) {
+        console.error("Reference search failed, falling back to semantic mapper", err);
+      }
+
+      // Fall back to semantic regex parser if no direct song match is found
+      const cleanText = text.toLowerCase();
+      if (cleanText.includes('spotify.com') || cleanText.includes('open.spotify') || cleanText.includes('http://') || cleanText.includes('https://')) {
+        setTimeout(() => {
+          let d = 0.5, e = 0.5, v = 0.5, a = 0.5, i = 0.0;
+          if (cleanText.includes('electronic') || cleanText.includes('dance') || cleanText.includes('club')) {
+            d = 0.85; e = 0.80; a = 0.05;
+          } else if (cleanText.includes('acoustic') || cleanText.includes('piano') || cleanText.includes('folk')) {
+            d = 0.40; e = 0.30; a = 0.85;
+          } else if (cleanText.includes('ambient') || cleanText.includes('instrumental') || cleanText.includes('lofi')) {
+            d = 0.50; e = 0.25; a = 0.70; i = 0.85;
+          }
+          animateSlidersTo(d, e, v, a, i);
+        }, 800);
+        return;
+      }
+
+      let d = 0.50, e = 0.50, v = 0.50, a = 0.50, i = 0.00;
+
+      // Energy mapping
+      if (/\b(high energy|energetic|upbeat|hype|intense|loud|fast|powerful|aggressive|electronic|techno)\b/.test(text)) {
+        e = 0.85;
+      } else if (/\b(low energy|chill|relaxed|calm|slow|reflective|quiet|peaceful|soft|soothing|sleep|ambient)\b/.test(text)) {
+        e = 0.20;
+      }
+
+      // Groove (danceability) mapping
+      if (/\b(dance|groove|groovy|rhythmic|house|beat|club|bouncy|disco|pop)\b/.test(text)) {
+        d = 0.90;
+      } else if (/\b(ambient|atmospheric|slow|cinematic|classical|relaxing)\b/.test(text)) {
+        d = 0.15;
+      }
+
+      // Valence (happiness) mapping
+      if (/\b(happy|cheerful|uplifting|feel-good|positive|bright|joyful|sunny)\b/.test(text)) {
+        v = 0.85;
+      } else if (/\b(sad|moody|dark|somber|melancholic|emotional|grim|minor|depressing)\b/.test(text)) {
+        v = 0.15;
+      }
+
+      // Acousticness (organic) mapping
+      if (/\b(acoustic|piano|guitar|organic|folk|natural|unplugged|violin|orchestra)\b/.test(text)) {
+        a = 0.90;
+      } else if (/\b(electronic|synthesizer|synth|techno|digital|sci-fi|cyberpunk|drum machine)\b/.test(text)) {
+        a = 0.05;
+      }
+
+      // Instrumentalness mapping
+      if (/\b(instrumental|background|beat|no vocals|karaoke|soundtrack|score|ambient beat)\b/.test(text)) {
+        i = 0.95;
+      } else if (/\b(vocal|song|lyrical|rap|singer|vocals|verse|chorus)\b/.test(text)) {
+        i = 0.02;
+      }
+
+      animateSlidersTo(d, e, v, a, i);
+    }
+
+    syncBtn.addEventListener('click', runVibeSync);
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        runVibeSync();
+      }
+    });
+  }
+
+  // 🎙️ Voice/Humming-based Shazam Search
+  const micBtn = document.getElementById('vibe-mic-btn');
+  const micWaveContainer = document.getElementById('vibe-mic-wave-container');
+  const micStatusText = document.getElementById('mic-status-text');
+
+  if (micBtn && micWaveContainer) {
+    let mediaRecorder = null;
+    let audioChunks = [];
+
+    micBtn.addEventListener('click', async () => {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        return;
+      }
+
+      audioChunks = [];
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        micWaveContainer.classList.remove('hidden');
+        micWaveContainer.classList.add('flex');
+        micStatusText.textContent = "Listening to your voice... hum or sing now!";
+        micBtn.textContent = "🛑 Stop Record";
+        micBtn.classList.remove('bg-purple-600');
+        micBtn.classList.add('bg-red-600');
+
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = (event) => {
+          audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          micStatusText.textContent = "Processing acoustic fingerprint...";
+          micBtn.textContent = "🎙️ Shazam-Sync";
+          micBtn.classList.remove('bg-red-600');
+          micBtn.classList.add('bg-purple-600');
+
+          stream.getTracks().forEach(track => track.stop());
+
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          const formData = new FormData();
+          formData.append('audio', audioBlob, 'recording.webm');
+
+          try {
+            const res = await fetch('/api/audio/shazam', {
+              method: 'POST',
+              body: formData
+            });
+            const data = await res.json();
+
+            if (data.status === 'success' && data.matched) {
+              animateSlidersTo(data.danceability, data.energy, data.valence, data.acousticness, data.instrumentalness);
+
+              const oldPlaceholder = searchInput.placeholder;
+              searchInput.value = `🎙️ Shazam Match: "${data.trackName}" by ${data.artistName}!`;
+              searchInput.classList.add('text-purple-600', 'font-bold');
+              setTimeout(() => {
+                searchInput.value = '';
+                searchInput.placeholder = oldPlaceholder;
+                searchInput.classList.remove('text-purple-600', 'font-bold');
+              }, 4000);
+            } else {
+              alert("No close acoustic match found. Try humming a bit louder!");
+            }
+          } catch (err) {
+            console.error("Shazam match failed", err);
+            alert("Acoustic match failed. Make sure your server is running and microphone permission is enabled.");
+          } finally {
+            micWaveContainer.classList.remove('flex');
+            micWaveContainer.classList.add('hidden');
+          }
+        };
+
+        mediaRecorder.start();
+        setTimeout(() => {
+          if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+          }
+        }, 3500);
+
+      } catch (err) {
+        console.error("Microphone access blocked", err);
+        alert("Microphone access is required for Hum-to-Search. Please check your browser permissions!");
+      }
+    });
+  }
+
+  // 3. Popular reference buttons mapping
+  document.querySelectorAll('.popular-ref-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ref = btn.dataset.ref;
+      let d = 0.5, e = 0.5, v = 0.5, a = 0.5, i = 0.0;
+
+      if (ref === 'get-lucky') {
+        d = 0.90; e = 0.80; v = 0.85; a = 0.05; i = 0.02;
+      } else if (ref === 'bad-guy') {
+        d = 0.70; e = 0.45; v = 0.55; a = 0.30; i = 0.15;
+      } else if (ref === 'zimmer-time') {
+        d = 0.20; e = 0.30; v = 0.15; a = 0.75; i = 0.90;
+      } else if (ref === 'shape-of-you') {
+        d = 0.85; e = 0.65; v = 0.90; a = 0.60; i = 0.00;
+      } else if (ref === 'lofi-girl') {
+        d = 0.50; e = 0.20; v = 0.40; a = 0.70; i = 0.85;
+      }
+
+      animateSlidersTo(d, e, v, a, i);
+    });
+  });
+
+  function animateSlidersTo(d, e, v, a, i) {
+    const sDance = document.getElementById('vibe_dance');
+    if (!sDance) return; // Safely return if the vibe matcher is locked
+
+    const sEnergy = document.getElementById('vibe_energy');
+    const sValence = document.getElementById('vibe_valence');
+    const sAcoustic = document.getElementById('vibe_acoustic');
+    const sInstrumental = document.getElementById('vibe_instrumental');
+
+    sDance.value = d;
+    sEnergy.value = e;
+    sValence.value = v;
+    sAcoustic.value = a;
+    sInstrumental.value = i;
+
+    document.getElementById('vibe_dance_val').textContent = d.toFixed(2);
+    document.getElementById('vibe_energy_val').textContent = e.toFixed(2);
+    document.getElementById('vibe_valence_val').textContent = v.toFixed(2);
+    document.getElementById('vibe_acoustic_val').textContent = a.toFixed(2);
+    document.getElementById('vibe_instrumental_val').textContent = i.toFixed(2);
+
+    fetchVibeRecommendations();
+  }
+
+  function showUpgradeModal() {
+    const modal = document.getElementById('premium-upgrade-modal');
+    if (modal) modal.classList.remove('hidden');
+  }
+  function hideUpgradeModal() {
+    const modal = document.getElementById('premium-upgrade-modal');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  // Handle URL deep linking for tabs
+  window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeTab = urlParams.get('tab');
+    if (activeTab === 'vibe' || activeTab === 'brief') {
+      switchDashboardTab(activeTab);
+    }
+  });
 </script>
+
+<!-- Room Creation Modal -->
+<div
+  id="room-create-modal"
+  class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4"
+>
+  <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl animate-rise">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <h3 class="text-lg font-bold text-ink">Name your campaign room</h3>
+        <p class="text-xs text-ink/40 mt-0.5">
+          Selected:
+          <span id="room-create-mood-label" class="font-bold text-tide"></span>
+        </p>
+      </div>
+      <button
+        id="close-room-create-modal"
+        class="text-ink/30 hover:text-ink transition"
+      >
+        ✕
+      </button>
+    </div>
+    <form
+      id="room-create-form"
+      action="{{ url_for('create_campaign_room') }}"
+      method="POST"
+      class="space-y-4"
+    >
+      <input type="hidden" name="mood_key" id="room-create-mood-key" value="" />
+      <div>
+        <label
+          class="block text-[10px] font-bold uppercase tracking-wider text-ink/40 mb-1.5"
+          >Room Name</label
+        >
+        <input
+          type="text"
+          name="room_name"
+          id="room-create-name-input"
+          placeholder="e.g. Summer Launch Q3"
+          required
+          class="w-full rounded-xl border border-ink/10 bg-ink/[0.02] px-4 py-3 text-sm font-bold text-ink outline-none focus:border-tide focus:ring-4 focus:ring-tide/10 transition"
+        />
+      </div>
+      <p class="text-[10px] text-ink/30 italic">
+        Tip: Use a name that helps your team identify this specific project
+        brief.
+      </p>
+      <button
+        type="submit"
+        class="w-full rounded-2xl bg-tide py-3 text-sm font-bold text-white shadow-lg shadow-tide/20 hover:bg-deep transition mt-4"
+      >
+        Create Room
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Dashboard Rename Modal -->
+<div
+  id="dashboard-rename-modal"
+  class="hidden fixed inset-0 z-[110] flex items-center justify-center bg-ink/60 backdrop-blur-sm p-4"
+>
+  <div class="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl animate-rise">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="text-lg font-bold text-ink">Rename Room</h3>
+      <button
+        id="close-dashboard-rename-modal"
+        class="text-ink/30 hover:text-ink transition"
+      >
+        ✕
+      </button>
+    </div>
+    <form id="dashboard-rename-form" class="space-y-4">
+      <input type="hidden" id="dashboard-rename-room-id" value="" />
+      <div>
+        <label
+          class="block text-[10px] font-bold uppercase tracking-wider text-ink/40 mb-1.5"
+          >New Name</label
+        >
+        <input
+          type="text"
+          id="dashboard-rename-input"
+          placeholder="New room name..."
+          required
+          class="w-full rounded-xl border border-ink/10 bg-ink/[0.02] px-4 py-3 text-sm font-bold text-ink outline-none focus:border-tide focus:ring-4 focus:ring-tide/10 transition"
+        />
+      </div>
+      <button
+        type="submit"
+        class="w-full rounded-2xl bg-tide py-3 text-sm font-bold text-white shadow-lg shadow-tide/20 hover:bg-deep transition mt-4"
+      >
+        Save Name
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Premium Upgrade Modal -->
+<div
+  id="premium-upgrade-modal"
+  class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-ink/75 backdrop-blur-sm p-4"
+>
+  <div
+    class="bg-gradient-to-br from-white to-slate-50 rounded-3xl w-full max-w-md p-7 shadow-2xl animate-rise relative overflow-hidden border border-slate-200/50 text-center"
+  >
+    <div
+      class="absolute -right-16 -top-16 w-32 h-32 rounded-full bg-tide/5 blur-3xl"
+    ></div>
+    <div
+      class="absolute -left-16 -bottom-16 w-32 h-32 rounded-full bg-deep/5 blur-3xl"
+    ></div>
+
+    <div class="flex justify-end mb-2">
+      <button
+        onclick="hideUpgradeModal()"
+        class="text-ink/30 hover:text-ink transition text-lg font-bold"
+      >
+        ✕
+      </button>
+    </div>
+
+    <div class="space-y-5">
+      <div
+        class="w-16 h-16 rounded-full bg-tide/10 flex items-center justify-center text-3xl mx-auto text-tide"
+      >
+        &#128274;
+      </div>
+
+      <div>
+        <h3 class="text-xl font-bold text-ink mt-2">
+          Log in now and use more features for free
+        </h3>
+        <p class="text-xs text-ink/60 leading-relaxed mt-2">
+          Join as a registered member to unlock team collaboration, upload
+          custom spotting audio/video reels, and utilize
+          high-fidelity AI recommendations with zero restrictions.
+        </p>
+      </div>
+
+      <div class="pt-2">
+        <a
+          href="/logout"
+          class="w-full text-center py-3.5 rounded-2xl bg-gradient-to-r from-tide to-deep hover:from-deep hover:to-[#1859a5] text-white font-bold text-sm uppercase tracking-wider transition block shadow-lg shadow-tide/20 transform hover:scale-[1.01]"
+        >
+          &#128273; Log In / Register Free
+        </a>
+      </div>
+
+      <p class="text-[10px] text-ink/30 italic">
+        Create your free workspace in seconds. No credit card required.
+      </p>
+    </div>
+  </div>
+</div>
 {% endblock %}

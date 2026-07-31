@@ -1,0 +1,233 @@
+{% extends "base.html" %} {% block body %}
+<div style="display: none" id="CID" data-id="{{ collaborator_id }}"></div>
+<div class="flex h-screen overflow-hidden bg-white">
+  <!-- Sidebar -->
+  <div class="w-80 border-r border-ink/10 flex flex-col bg-white">
+    <div
+      class="border-b border-ink/10 px-5 py-4 flex items-center justify-between"
+    >
+      <h2 class="text-lg font-bold text-ink">Collaborators</h2>
+      <a
+        href="{{ url_for('dashboard') }}"
+        class="p-2 rounded-full hover:bg-ink/5"
+      >
+        <svg
+          class="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </a>
+    </div>
+    <div class="flex-1 overflow-y-auto divide-y divide-ink/5">
+      {% for thread in social_sidebar.chat_threads %}
+      <a
+        href="{{ url_for('conversation', collaborator_id=thread.collaborator_id) }}"
+        class="px-4 py-3 hover:bg-ink/5 block {% if thread.collaborator_id == collaborator_id %}bg-tide/5 border-l-4 border-l-tide{% endif %}"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-tide to-deep flex items-center justify-center text-white font-bold"
+          >
+            {{ thread.collaborator_label[0]|upper }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-ink truncate">
+              {{ thread.collaborator_label }}
+            </p>
+            <p class="text-xs text-ink/50 truncate">
+              {% if thread.recent_messages %}{{ thread.recent_messages[-1].body
+              }}{% else %}No messages{% endif %}
+            </p>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    <div class="border-t border-ink/10 px-4 py-3">
+      <a
+        href="{{ url_for('dashboard') }}"
+        class="flex items-center justify-center gap-2 w-full rounded-lg border border-ink/15 px-4 py-2 text-sm hover:bg-ink/5"
+        >Back to workspace</a
+      >
+    </div>
+  </div>
+
+  <!-- Main pane -->
+  <div class="flex-1 flex flex-col">
+    <!-- Header -->
+    <div
+      class="border-b border-ink/10 px-6 py-4 flex items-center justify-between"
+    >
+      <div class="flex items-center gap-4">
+        <div
+          class="w-12 h-12 rounded-full bg-gradient-to-br from-tide to-deep flex items-center justify-center text-white font-bold"
+        >
+          {{ collaborator.username[0]|upper }}
+        </div>
+        <div>
+          <h2 class="text-lg font-bold text-ink">
+            {{ collaborator.username }}
+          </h2>
+          <p class="text-xs text-ink/50">{{ collaborator.email }}</p>
+        </div>
+      </div>
+      <a
+        href="{{ url_for('dashboard') }}"
+        class="p-2 rounded-full hover:bg-ink/5"
+      >
+        <svg
+          class="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </a>
+    </div>
+
+    <!-- Messages -->
+    <div
+      id="messages-container"
+      class="flex-1 overflow-y-auto px-6 py-6 space-y-4 bg-white"
+    >
+      {% for message in messages %}
+      <div
+        class="flex items-end {% if message.is_sender %}justify-end{% else %}justify-start{% endif %}"
+      >
+        <div class="max-w-xs">
+          <div
+            class="rounded-2xl px-4 py-3 text-sm {% if message.is_sender %}bg-tide text-white{% else %}bg-ink/5 text-ink border border-ink/10{% endif %}"
+          >
+            {{ message.body }}
+          </div>
+          <div
+            class="mt-1 text-xs text-ink/45 {% if message.is_sender %}text-right{% endif %}"
+          >
+            {{ message.created_at | eest }}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Compose -->
+    <div class="border-t border-ink/10 bg-white px-6 py-4">
+      <form
+        id="compose-form"
+        method="post"
+        action="{{ url_for('send_collaborator_message') }}"
+        class="flex gap-3 items-end"
+      >
+        <input
+          type="hidden"
+          name="collaborator_id"
+          value="{{ collaborator_id }}"
+        />
+        <input
+          type="text"
+          name="body"
+          maxlength="500"
+          placeholder="Aa..."
+          class="flex-1 rounded-full border border-ink/20 px-4 py-3 text-sm outline-none focus:border-tide focus:ring-2 focus:ring-tide/20"
+          required
+        />
+        <button
+          type="submit"
+          class="rounded-full bg-tide hover:bg-tide/90 text-white p-3"
+        >
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script
+  src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+  crossorigin="anonymous"
+></script>
+<script>
+  const CID = parseInt(
+    document.getElementById("CID").getAttribute("data-id"),
+    10,
+  );
+  const socket = typeof io === "function" ? io() : null;
+  const compose = document.getElementById("compose-form");
+  const messages = document.getElementById("messages-container");
+
+  if (compose) {
+    compose.addEventListener("submit", async function (ev) {
+      ev.preventDefault();
+      const input = compose.querySelector("input[name=body]");
+      const body = input.value.trim();
+      if (!body) return;
+      input.value = "";
+      if (socket) {
+        socket.emit("chat:send", { collaborator_id: CID, body: body });
+      } else {
+        try {
+          await fetch(compose.action, {
+            method: "POST",
+            body: new FormData(compose),
+          });
+        } catch (e) {}
+      }
+    });
+
+    compose
+      .querySelector("input[name=body]")
+      .addEventListener("keydown", function (ev) {
+        if (ev.key === "Enter" && !ev.shiftKey) {
+          ev.preventDefault();
+          compose.requestSubmit();
+        }
+      });
+  }
+
+  if (socket) {
+    socket.on("chat:new_message", function (payload) {
+      if (Number(payload && payload.collaborator_id) !== CID) return;
+      const div = document.createElement("div");
+      div.className =
+        "flex items-end " +
+        (payload.direction === "You" ? "justify-end" : "justify-start");
+      const txt = String(payload.body || "");
+      const safe = txt
+        .split("&")
+        .join("&amp;")
+        .split("<")
+        .join("&lt;")
+        .split(">")
+        .join("&gt;");
+      div.innerHTML =
+        '<div class="max-w-xs"><div class="rounded-2xl px-4 py-3 text-sm ' +
+        (payload.direction === "You"
+          ? "bg-tide text-white"
+          : "bg-ink/5 text-ink border border-ink/10") +
+        '">' +
+        safe +
+        "</div></div>";
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    });
+  }
+
+  messages.scrollTop = messages.scrollHeight;
+</script>
+{% endblock %}

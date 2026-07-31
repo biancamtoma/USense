@@ -1,84 +1,586 @@
-<div class="fixed bottom-6 right-6 z-40">
-  <div id="convos-panel" class="mb-3 hidden w-[22rem] max-w-[calc(100vw-2rem)] rounded-3xl border border-ink/10 bg-white/95 p-4 shadow-float backdrop-blur">
-    <div class="mb-3 flex items-center justify-between">
-      <div>
-        <p class="font-display text-[11px] uppercase tracking-[0.14em] text-tide">Social</p>
-        <h4 class="font-display text-lg font-bold text-ink">Convos</h4>
+<!-- Messenger-style chat widget: fixed bottom-right corner -->
+<div class="fixed bottom-6 right-6 z-50 flex flex-col items-end" id="chat-widget-root" style="bottom: 24px !important; right: 24px !important; left: auto !important; width: auto !important; direction: ltr !important;">
+
+  <!-- ========== Active Chat Window (one at a time) ========== -->
+  <div id="chat-window"
+    class="hidden mb-3 w-[22rem] max-w-[calc(100vw-2rem)] rounded-2xl border border-ink/15 bg-white shadow-2xl flex flex-col transition-all duration-300 ease-out origin-bottom-right"
+    style="height: 26rem; transform: scale(0.95); opacity: 0;">
+
+    <!-- Chat header -->
+    <div class="flex-shrink-0 border-b border-ink/10 px-4 py-3 flex items-center justify-between bg-gradient-to-r from-tide to-deep rounded-t-2xl">
+      <div class="flex items-center gap-3 min-w-0">
+        <div id="chat-window-avatar" class="flex-shrink-0 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-sm"></div>
+        <div class="min-w-0">
+          <p id="chat-window-name" class="text-sm font-bold text-white truncate"></p>
+          <p id="chat-window-email" class="text-[10px] text-white/60 truncate"></p>
+        </div>
       </div>
-      <div class="flex items-center gap-2">
-        <button id="convos-new" type="button" class="rounded-lg border border-deep/25 bg-deep/10 px-2.5 py-1 text-xs font-semibold text-deep hover:bg-deep/20">New</button>
-        <button id="convos-close" type="button" class="rounded-lg border border-ink/15 px-2 py-1 text-xs font-semibold text-ink/60 hover:bg-ink/5">Close</button>
+      <div class="flex items-center gap-1">
+        <button id="chat-back-btn" type="button"
+          class="p-1.5 rounded-full hover:bg-white/15 transition text-white/80 hover:text-white" title="Back to threads">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <button id="chat-window-close" type="button"
+          class="p-1.5 rounded-full hover:bg-white/15 transition text-white/80 hover:text-white" title="Close">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
       </div>
     </div>
 
-    <div id="convos-new-wrap" class="mb-3 hidden rounded-2xl border border-ink/10 bg-frost/70 p-3">
-      <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink/45">Start new conversation</p>
-      {% if social_sidebar.friend_summary.friends %}
-      <form method="post" action="{{ url_for('send_friend_message') }}" class="mt-2.5 space-y-2">
-        <select name="friend_id" class="w-full rounded-xl border border-ink/20 bg-white px-3 py-2 text-xs text-ink outline-none transition focus:border-tide focus:ring-4 focus:ring-tide/20" required>
-          {% for friend in social_sidebar.friend_summary.friends %}
-          <option value="{{ friend.id }}">{{ friend.label }} ({{ friend.email }})</option>
-          {% endfor %}
-        </select>
-        <input
-          id="convos-new-input"
-          type="text"
-          name="body"
-          maxlength="500"
-          placeholder="Write a first message..."
-          class="w-full rounded-xl border border-ink/20 bg-white px-3 py-2 text-xs text-ink outline-none transition focus:border-tide focus:ring-4 focus:ring-tide/20"
-          required
-        />
-        <div class="flex justify-end">
-          <button type="submit" class="rounded-xl bg-deep px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white">Send</button>
-        </div>
+    <!-- Messages area -->
+    <div id="chat-window-messages" class="flex-1 overflow-y-auto px-4 py-3 space-y-2 bg-white min-h-0">
+      <div class="flex items-center justify-center h-full">
+        <p class="text-sm text-ink/40">Loading messages…</p>
+      </div>
+    </div>
+
+    <!-- Compose area -->
+    <div class="flex-shrink-0 border-t border-ink/10 bg-white px-3 py-2.5 rounded-b-2xl">
+      <form id="chat-compose-form" class="flex gap-2 items-center">
+        <input type="text" id="chat-compose-input" maxlength="500" placeholder="Aa…"
+          class="flex-1 rounded-full border border-ink/15 bg-ink/[0.03] px-3.5 py-2 text-sm outline-none transition focus:border-tide focus:ring-2 focus:ring-tide/20" required autocomplete="off" />
+        <button type="submit" class="rounded-full bg-tide hover:bg-deep text-white p-2 transition flex items-center justify-center flex-shrink-0" title="Send">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
       </form>
-      {% else %}
-      <p class="mt-2 text-xs text-ink/55">Add at least one friend to start a conversation.</p>
-      {% endif %}
-    </div>
-
-    <div class="max-h-[60vh] space-y-3 overflow-y-auto pr-1">
-      {% if social_sidebar.chat_threads %}
-        {% for thread in social_sidebar.chat_threads %}
-        <div class="rounded-2xl border border-ink/10 bg-frost/75 p-3">
-          <p class="text-sm font-semibold text-ink">{{ thread.friend_label }}</p>
-          <p class="mt-0.5 text-[11px] text-ink/55">{{ thread.friend_email }}</p>
-          <div class="mt-2 space-y-2">
-            {% if thread.recent_messages %}
-              {% for message in thread.recent_messages %}
-              <div class="rounded-xl bg-white px-2.5 py-2 text-[11px] text-ink/70">
-                <span class="font-semibold text-ink">{{ message.direction }}:</span>
-                {{ message.body }}
-              </div>
-              {% endfor %}
-            {% else %}
-            <p class="text-[11px] text-ink/50">No messages yet. Start the conversation.</p>
-            {% endif %}
-          </div>
-          <form method="post" action="{{ url_for('send_friend_message') }}" class="mt-2.5">
-            <input type="hidden" name="friend_id" value="{{ thread.friend_id }}" />
-            <input
-              type="text"
-              name="body"
-              maxlength="500"
-              placeholder="Write a message..."
-              class="w-full rounded-xl border border-ink/20 bg-white px-3 py-2 text-xs text-ink outline-none transition focus:border-tide focus:ring-4 focus:ring-tide/20"
-              required
-            />
-            <div class="mt-2 flex justify-end">
-              <button type="submit" class="rounded-xl bg-deep px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white">Send</button>
-            </div>
-          </form>
-        </div>
-        {% endfor %}
-      {% else %}
-      <p class="text-sm text-ink/50">Accept a friend request to start chatting.</p>
-      {% endif %}
     </div>
   </div>
 
-  <button id="convos-toggle" type="button" class="rounded-full bg-gradient-to-r from-deep to-tide px-5 py-3 text-xs font-extrabold uppercase tracking-[0.14em] text-white shadow-xl shadow-tide/40 hover:from-[#1859a5] hover:to-deep">
-    Convos
+  <!-- ========== Thread List Panel ========== -->
+  <div id="convos-panel"
+    class="hidden mb-3 w-[22rem] max-w-[calc(100vw-2rem)] rounded-2xl border border-ink/15 bg-white shadow-2xl flex flex-col transition-all duration-300 ease-out origin-bottom-right relative"
+    style="height: 28rem; transform: scale(0.95); opacity: 0;">
+
+    <!-- ─── Thread List View ─── -->
+    <div id="convos-threads-view" class="flex flex-col flex-1 min-h-0 relative">
+      <!-- Header -->
+      <div class="flex-shrink-0 border-b border-ink/10 px-5 py-3.5 flex items-center justify-between">
+        <h4 class="font-display text-base font-bold text-ink">Messages</h4>
+        <button id="convos-close" type="button"
+          class="p-1.5 rounded-full hover:bg-ink/5 transition text-ink/50 hover:text-ink" title="Close">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Thread list -->
+      <div class="flex-1 overflow-y-auto min-h-0 pb-16">
+        <div class="divide-y divide-ink/5">
+          {% if social_sidebar.chat_threads %}
+          {% for thread in social_sidebar.chat_threads %}
+          <button type="button"
+             class="chat-thread-btn w-full text-left px-4 py-3 hover:bg-ink/[0.03] transition border-l-4 border-transparent hover:border-l-tide block"
+             data-collaborator-id="{{ thread.collaborator_id }}"
+             data-collaborator-label="{{ thread.collaborator_label }}"
+             data-collaborator-email="{{ thread.collaborator_email }}">
+            <div class="flex items-center gap-3">
+              <div class="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-tide to-deep flex items-center justify-center text-white font-bold text-xs">
+                {{ thread.collaborator_label[0]|upper }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-ink truncate">{{ thread.collaborator_label }}</p>
+                {% if thread.recent_messages %}
+                <p class="text-xs text-ink/50 truncate mt-0.5">{{ thread.recent_messages[-1].body }}</p>
+                {% else %}
+                <p class="text-xs text-ink/40 truncate mt-0.5">No messages yet</p>
+                {% endif %}
+              </div>
+              <svg class="w-3.5 h-3.5 text-ink/20 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+            </div>
+          </button>
+          {% endfor %}
+          {% else %}
+          <div class="px-4 py-8 text-center">
+            <svg class="w-10 h-10 mx-auto text-ink/15 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+            <p class="text-sm text-ink/50">Accept a collaborator invitation to start chatting.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Floating Plus Button in bottom right -->
+      <div class="absolute bottom-4 right-4 z-10">
+        <button id="convos-new-btn" type="button"
+          class="w-11 h-11 rounded-full bg-gradient-to-r from-tide to-deep hover:shadow-xl shadow-lg text-white flex items-center justify-center transition-all duration-200 transform hover:scale-110"
+          title="New Conversation">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ─── New Conversation Selector View ─── -->
+    <div id="convos-new-view" class="hidden flex flex-col flex-1 min-h-0">
+      <!-- Header -->
+      <div class="flex-shrink-0 border-b border-ink/10 px-4 py-3 flex items-center justify-between bg-ink/[0.02]">
+        <div class="flex items-center gap-2">
+          <button id="convos-new-back" type="button"
+            class="p-1.5 rounded-full hover:bg-ink/5 transition text-ink/50 hover:text-ink" title="Back to messages">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <span class="text-sm font-bold text-ink">New Message</span>
+        </div>
+        <button id="convos-new-close" type="button"
+          class="p-1.5 rounded-full hover:bg-ink/5 transition text-ink/50 hover:text-ink" title="Close">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Search input container (fixed at top of new view) -->
+      <div class="flex-shrink-0 px-4 py-2 border-b border-ink/5 bg-white">
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-ink/40">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </span>
+          <input type="text" id="convos-contact-search" placeholder="Search contacts..."
+            class="w-full rounded-full border border-ink/15 bg-ink/[0.02] pl-9 pr-8 py-1.5 text-xs outline-none transition focus:border-tide focus:ring-2 focus:ring-tide/20" autocomplete="off" />
+          <button type="button" id="convos-contact-search-clear" class="absolute inset-y-0 right-0 pr-3 flex items-center text-ink/30 hover:text-ink/60 hidden" title="Clear search">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Collaborator list select -->
+      <div class="flex-1 overflow-y-auto min-h-0 p-3 space-y-2">
+        <p class="text-[10px] font-bold uppercase tracking-wider text-ink/40 px-2 mb-1" id="convos-contacts-title">Select a Collaborator</p>
+        <div class="space-y-1">
+          {% if social_sidebar.collaborator_summary.collaborators %}
+          {% for collab in social_sidebar.collaborator_summary.collaborators %}
+          <button type="button"
+             class="new-chat-collab-btn w-full text-left px-3 py-2.5 rounded-xl hover:bg-tide/5 transition flex items-center gap-3 border border-transparent hover:border-tide/10"
+             data-collaborator-id="{{ collab.id }}"
+             data-collaborator-label="{{ collab.label }}"
+             data-collaborator-email="{{ collab.email }}">
+            <div class="w-8 h-8 rounded-full bg-tide/10 text-tide flex items-center justify-center font-bold text-xs uppercase flex-shrink-0">
+              {{ collab.label[0] }}
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-xs font-bold text-ink truncate">{{ collab.label }}</p>
+              <p class="text-[10px] text-ink/40 truncate">{{ collab.email }}</p>
+            </div>
+          </button>
+          {% endfor %}
+          <!-- Empty State -->
+          <div id="convos-search-empty" class="hidden text-center py-8 px-4">
+            <p class="text-xs text-ink/50">No contacts found matching "<span id="search-query-highlight" class="font-semibold text-ink"></span>"</p>
+          </div>
+          {% else %}
+          <div class="text-center py-8 px-4">
+            <p class="text-xs text-ink/50">You don't have any active collaborators yet.</p>
+            <a href="#" id="new-chat-invite-link" class="text-xs font-bold text-tide hover:underline block mt-2">👉 Invite someone to collaborate</a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- ========== Floating FAB Button ========== -->
+  <button id="convos-toggle" type="button"
+    class="rounded-full bg-gradient-to-r from-tide to-deep hover:shadow-xl shadow-lg text-white p-4 transition-all duration-200 transform hover:scale-110 flex items-center justify-center relative"
+    style="align-self: flex-end !important; margin-left: auto !important; margin-right: 0 !important;"
+    title="Open messages">
+    <svg id="convos-icon-chat" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+    <svg id="convos-icon-close" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
   </button>
 </div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
+<script>
+(function(){
+  if (window.__chatWidgetInitialized) return;
+  window.__chatWidgetInitialized = true;
+
+  // Elements
+  const root        = document.getElementById('chat-widget-root');
+  const toggle      = document.getElementById('convos-toggle');
+  const iconChat    = document.getElementById('convos-icon-chat');
+  const iconClose   = document.getElementById('convos-icon-close');
+  const panel       = document.getElementById('convos-panel');
+  const panelClose  = document.getElementById('convos-close');
+  const chatWin     = document.getElementById('chat-window');
+  const chatAvatar  = document.getElementById('chat-window-avatar');
+  const chatName    = document.getElementById('chat-window-name');
+  const chatEmail   = document.getElementById('chat-window-email');
+  const chatMsgs    = document.getElementById('chat-window-messages');
+  const chatClose   = document.getElementById('chat-window-close');
+  const chatBack    = document.getElementById('chat-back-btn');
+  const composeForm = document.getElementById('chat-compose-form');
+  const composeIn   = document.getElementById('chat-compose-input');
+  const threadsView = document.getElementById('convos-threads-view');
+  const newView     = document.getElementById('convos-new-view');
+  const newBtn      = document.getElementById('convos-new-btn');
+  const newBack     = document.getElementById('convos-new-back');
+  const newClose    = document.getElementById('convos-new-close');
+  const inviteLink  = document.getElementById('new-chat-invite-link');
+
+  let activeCollaboratorId = null;
+  let socket = null;
+
+  // --- Animation helpers ---
+  function showEl(el) {
+    el.classList.remove('hidden');
+    requestAnimationFrame(() => {
+      el.style.transform = 'scale(1)';
+      el.style.opacity = '1';
+    });
+  }
+  function hideEl(el) {
+    el.style.transform = 'scale(0.95)';
+    el.style.opacity = '0';
+    setTimeout(() => el.classList.add('hidden'), 200);
+  }
+
+  // --- State management ---
+  function showThreadList() {
+    hideEl(chatWin);
+    setTimeout(() => showEl(panel), 210);
+    iconChat.classList.add('hidden');
+    iconClose.classList.remove('hidden');
+  }
+
+  function hideAll() {
+    hideEl(panel);
+    hideEl(chatWin);
+    activeCollaboratorId = null;
+    iconChat.classList.remove('hidden');
+    iconClose.classList.add('hidden');
+    if (threadsView && newView) {
+      newView.classList.add('hidden');
+      threadsView.classList.remove('hidden');
+    }
+    if (typeof resetContactSearch === 'function') {
+      resetContactSearch();
+    }
+  }
+
+  function isAnythingOpen() {
+    return !panel.classList.contains('hidden') || !chatWin.classList.contains('hidden');
+  }
+
+  // --- Open a specific chat ---
+  async function openChat(collaboratorId, collaboratorLabel, collaboratorEmail) {
+    activeCollaboratorId = collaboratorId;
+
+    // Update header
+    chatAvatar.textContent = (collaboratorLabel || '?')[0].toUpperCase();
+    chatName.textContent = collaboratorLabel || 'Chat';
+    chatEmail.textContent = collaboratorEmail || '';
+
+    // Show loading state
+    chatMsgs.innerHTML = '<div class="flex items-center justify-center h-full"><div class="flex flex-col items-center gap-2"><div class="w-6 h-6 border-2 border-tide/30 border-t-tide rounded-full animate-spin"></div><p class="text-xs text-ink/40">Loading…</p></div></div>';
+
+    // Hide panel, show chat
+    hideEl(panel);
+    setTimeout(() => showEl(chatWin), 210);
+    iconChat.classList.add('hidden');
+    iconClose.classList.remove('hidden');
+
+    // Fetch messages via API
+    try {
+      const resp = await fetch(`/api/chat/${collaboratorId}/messages`);
+      if (!resp.ok) throw new Error('Failed to load');
+      const data = await resp.json();
+      renderMessages(data.messages || []);
+    } catch (e) {
+      chatMsgs.innerHTML = '<div class="flex items-center justify-center h-full"><p class="text-sm text-red-400">Could not load messages.</p></div>';
+    }
+
+    // Focus input
+    setTimeout(() => composeIn.focus(), 300);
+
+    // Connect socket if needed
+    ensureSocket();
+  }
+
+  function renderMessages(msgs) {
+    if (!msgs.length) {
+      chatMsgs.innerHTML = '<div class="flex items-center justify-center h-full"><div class="text-center"><svg class="w-8 h-8 mx-auto text-ink/15 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg><p class="text-xs text-ink/40">No messages yet. Say hello!</p></div></div>';
+      return;
+    }
+    chatMsgs.innerHTML = '';
+    msgs.forEach(m => appendMessageBubble(m.body, m.is_sender, formatToEEST(m.created_at)));
+    scrollToBottom();
+  }
+
+  // --- EEST timezone helpers (UTC+3) ---
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  function formatToEEST(isoString) {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return null;
+    // Shift by +3 hours for EEST
+    const eest = new Date(d.getTime() + 3 * 60 * 60 * 1000);
+    const day = eest.getUTCDate().toString().padStart(2, '0');
+    const mon = MONTHS[eest.getUTCMonth()];
+    const hrs = eest.getUTCHours().toString().padStart(2, '0');
+    const min = eest.getUTCMinutes().toString().padStart(2, '0');
+    const currentYear = new Date().getFullYear();
+    if (eest.getUTCFullYear() < currentYear) {
+      return `${day} ${mon} ${eest.getUTCFullYear()}, ${hrs}:${min}`;
+    }
+    return `${day} ${mon}, ${hrs}:${min}`;
+  }
+
+  function nowEEST() {
+    return formatToEEST(new Date().toISOString());
+  }
+
+  function appendMessageBubble(body, isSender, timestamp) {
+    const wrap = document.createElement('div');
+    wrap.style.display = 'flex';
+    wrap.style.justifyContent = isSender ? 'flex-end' : 'flex-start';
+
+    const bubble = document.createElement('div');
+    bubble.style.maxWidth = '75%';
+    bubble.style.borderRadius = '1rem';
+    bubble.style.padding = '0.5rem 0.875rem';
+    bubble.style.fontSize = '0.875rem';
+    bubble.style.lineHeight = '1.5';
+    bubble.style.wordBreak = 'break-word';
+    if (isSender) {
+      bubble.style.backgroundColor = '#2890e2';
+      bubble.style.color = '#ffffff';
+      bubble.style.borderBottomRightRadius = '0.375rem';
+    } else {
+      bubble.style.backgroundColor = 'rgba(29, 36, 51, 0.06)';
+      bubble.style.color = '#1d2433';
+      bubble.style.borderBottomLeftRadius = '0.375rem';
+    }
+
+    const safe = String(body).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    bubble.innerHTML = safe;
+    wrap.appendChild(bubble);
+
+    const ts = document.createElement('div');
+    ts.style.fontSize = '10px';
+    ts.style.color = 'rgba(29, 36, 51, 0.35)';
+    ts.style.marginTop = '2px';
+    ts.style.paddingLeft = '4px';
+    ts.style.paddingRight = '4px';
+    ts.style.textAlign = isSender ? 'right' : 'left';
+    ts.textContent = timestamp || nowEEST();
+
+    const outer = document.createElement('div');
+    outer.appendChild(wrap);
+    outer.appendChild(ts);
+    chatMsgs.appendChild(outer);
+  }
+
+  function scrollToBottom() {
+    requestAnimationFrame(() => {
+      chatMsgs.scrollTo({
+        top: chatMsgs.scrollHeight,
+        behavior: 'smooth'
+      });
+    });
+  }
+
+  // Track message IDs we've already rendered to prevent duplicates
+  const renderedMessageIds = new Set();
+
+  // --- Socket.IO ---
+  function ensureSocket() {
+    if (socket) return;
+    if (typeof io !== 'function') return;
+    socket = io();
+    socket.on('chat:new_message', function(payload) {
+      if (!payload) return;
+      const cid = Number(payload.collaborator_id);
+      if (cid !== activeCollaboratorId) return;
+
+      // Skip messages we already showed optimistically
+      if (payload.message_id && renderedMessageIds.has(payload.message_id)) return;
+      if (payload.message_id) renderedMessageIds.add(payload.message_id);
+
+      // Skip sender echoes — we already rendered them optimistically
+      if (payload.direction === 'You') return;
+
+      appendMessageBubble(payload.body, false, null);
+      scrollToBottom();
+    });
+  }
+
+  // --- Send message ---
+  composeForm.addEventListener('submit', async function(ev) {
+    ev.preventDefault();
+    const body = composeIn.value.trim();
+    if (!body || !activeCollaboratorId) return;
+    composeIn.value = '';
+
+    // Always show the sent message immediately (optimistic rendering)
+    appendMessageBubble(body, true, null);
+    scrollToBottom();
+
+    ensureSocket();
+    if (socket) {
+      socket.emit('chat:send', { collaborator_id: activeCollaboratorId, body: body });
+    } else {
+      // HTTP fallback
+      const fd = new FormData();
+      fd.append('collaborator_id', activeCollaboratorId);
+      fd.append('body', body);
+      try { await fetch('/messages/send', { method: 'POST', body: fd }); } catch (e) {}
+    }
+  });
+
+  composeIn.addEventListener('keydown', function(ev) {
+    if (ev.key === 'Enter' && !ev.shiftKey) {
+      ev.preventDefault();
+      composeForm.requestSubmit();
+    }
+  });
+
+  // --- Toggle FAB ---
+  toggle.addEventListener('click', function() {
+    if (isAnythingOpen()) {
+      hideAll();
+    } else {
+      showThreadList();
+    }
+  });
+
+  // --- Thread list close ---
+  panelClose.addEventListener('click', hideAll);
+
+  // --- Chat window close ---
+  chatClose.addEventListener('click', hideAll);
+
+  // --- Back button ---
+  chatBack.addEventListener('click', showThreadList);
+
+  // --- Thread click handlers ---
+  function bindThreadClicks() {
+    document.querySelectorAll('.chat-thread-btn').forEach(function(btn) {
+      // Avoid double binding
+      if (btn.__bound) return;
+      btn.__bound = true;
+      btn.addEventListener('click', function() {
+        const collaboratorId = parseInt(btn.dataset.collaboratorId, 10);
+        const collaboratorLabel = btn.dataset.collaboratorLabel;
+        const collaboratorEmail = btn.dataset.collaboratorEmail;
+        openChat(collaboratorId, collaboratorLabel, collaboratorEmail);
+      });
+    });
+  }
+  bindThreadClicks();
+
+  // --- New Conversation View Handlers ---
+  const contactSearchInput = document.getElementById('convos-contact-search');
+  const contactSearchClear = document.getElementById('convos-contact-search-clear');
+  const searchEmptyState   = document.getElementById('convos-search-empty');
+  const queryHighlight     = document.getElementById('search-query-highlight');
+  const contactsTitle      = document.getElementById('convos-contacts-title');
+
+  function resetContactSearch() {
+    if (contactSearchInput) contactSearchInput.value = '';
+    if (contactSearchClear) contactSearchClear.classList.add('hidden');
+    if (searchEmptyState) searchEmptyState.classList.add('hidden');
+    if (contactsTitle) contactsTitle.classList.remove('hidden');
+    
+    document.querySelectorAll('.new-chat-collab-btn').forEach(btn => {
+      btn.classList.remove('hidden');
+    });
+  }
+
+  if (contactSearchInput) {
+    contactSearchInput.addEventListener('input', () => {
+      const q = contactSearchInput.value.toLowerCase().trim();
+      
+      if (q) {
+        if (contactSearchClear) contactSearchClear.classList.remove('hidden');
+        if (contactsTitle) contactsTitle.classList.add('hidden');
+      } else {
+        if (contactSearchClear) contactSearchClear.classList.add('hidden');
+        if (contactsTitle) contactsTitle.classList.remove('hidden');
+      }
+      
+      let visibleCount = 0;
+      const buttons = document.querySelectorAll('.new-chat-collab-btn');
+      
+      buttons.forEach(btn => {
+        const label = (btn.dataset.collaboratorLabel || '').toLowerCase();
+        const email = (btn.dataset.collaboratorEmail || '').toLowerCase();
+        
+        if (label.includes(q) || email.includes(q)) {
+          btn.classList.remove('hidden');
+          visibleCount++;
+        } else {
+          btn.classList.add('hidden');
+        }
+      });
+      
+      if (q && visibleCount === 0) {
+        if (searchEmptyState) {
+          searchEmptyState.classList.remove('hidden');
+          if (queryHighlight) queryHighlight.textContent = contactSearchInput.value;
+        }
+      } else {
+        if (searchEmptyState) searchEmptyState.classList.add('hidden');
+      }
+    });
+  }
+
+  if (contactSearchClear) {
+    contactSearchClear.addEventListener('click', () => {
+      resetContactSearch();
+      contactSearchInput.focus();
+    });
+  }
+
+  if (newBtn && threadsView && newView) {
+    newBtn.addEventListener('click', () => {
+      threadsView.classList.add('hidden');
+      newView.classList.remove('hidden');
+      resetContactSearch();
+      setTimeout(() => {
+        if (contactSearchInput) contactSearchInput.focus();
+      }, 100);
+    });
+  }
+
+  if (newBack && threadsView && newView) {
+    newBack.addEventListener('click', () => {
+      newView.classList.add('hidden');
+      threadsView.classList.remove('hidden');
+      resetContactSearch();
+    });
+  }
+
+  if (newClose) {
+    newClose.addEventListener('click', () => {
+      hideAll();
+    });
+  }
+
+  if (inviteLink) {
+    inviteLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      hideAll();
+      const drawerTrigger = document.getElementById('social-drawer-trigger');
+      if (drawerTrigger) drawerTrigger.click();
+    });
+  }
+
+  // Bind collaborator selector clicks
+  document.querySelectorAll('.new-chat-collab-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const collaboratorId = parseInt(btn.dataset.collaboratorId, 10);
+      const collaboratorLabel = btn.dataset.collaboratorLabel;
+      const collaboratorEmail = btn.dataset.collaboratorEmail;
+      
+      if (threadsView && newView) {
+        newView.classList.add('hidden');
+        threadsView.classList.remove('hidden');
+      }
+      
+      resetContactSearch();
+      openChat(collaboratorId, collaboratorLabel, collaboratorEmail);
+    });
+  });
+
+})();
+</script>

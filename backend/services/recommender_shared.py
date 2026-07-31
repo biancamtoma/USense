@@ -1,7 +1,7 @@
 import json
+import numpy as np
 
 from services.song_service import GENRE_COLORS, DEFAULT_COLOR
-
 
 COMPARISON_FEATURES = [
     "danceability",
@@ -32,17 +32,44 @@ FEATURE_WEIGHT_DEFAULTS = {
 }
 
 FEATURE_WEIGHT_UI = {
-    "danceability": ("Danceability", "How much rhythm and dance feel influences ranking."),
-    "energy": ("Energy", "How much intensity and activity matter."),
-    "valence": ("Valence", "How much positive or darker mood should drive results."),
-    "acousticness": ("Acousticness", "How much acoustic texture should influence recommendations."),
-    "instrumentalness": ("Instrumentalness", "How strongly vocal-free tracks should be preferred."),
-    "loudness": ("Loudness", "How much loudness contributes to similarity."),
-    "speechiness": ("Speechiness", "How much spoken-word character affects ranking."),
-    "liveness": ("Liveness", "How much live-performance feel influences ranking."),
-    "tempo": ("Tempo", "How strongly BPM similarity should matter."),
-    "duration_ms": ("Duration", "How much track length should influence similarity."),
-    "ms_played": ("Popularity (msPlayed)", "Default is 0 so popular tracks do not take over."),
+    "danceability": (
+        "Campaign Momentum",
+        "How much groove and movement should shape campaign alignment.",
+    ),
+    "energy": (
+        "Launch Energy",
+        "How much intensity and activation should influence results.",
+    ),
+    "valence": (
+        "Emotional Tone",
+        "How much upbeat versus reflective mood should steer recommendations.",
+    ),
+    "acousticness": (
+        "Organic Texture",
+        "How much acoustic or natural texture should matter for the brief.",
+    ),
+    "instrumentalness": (
+        "Instrumental Layer",
+        "How strongly vocal-free or soundtrack-like tracks should be preferred.",
+    ),
+    "loudness": ("Presence", "How much sonic punch should contribute to similarity."),
+    "speechiness": (
+        "Voice Presence",
+        "How much spoken-word or lyrical character should affect ranking.",
+    ),
+    "liveness": (
+        "Live Feel",
+        "How much live-performance energy should influence ranking.",
+    ),
+    "tempo": ("Pacing", "How strongly BPM should matter for campaign rhythm."),
+    "duration_ms": (
+        "Placement Length",
+        "How much track length should influence fit for the channel.",
+    ),
+    "ms_played": (
+        "Audience Pull",
+        "Default is 0 so popularity does not overpower campaign fit.",
+    ),
 }
 
 PREF_TO_FEATURE = {
@@ -69,9 +96,12 @@ PERSONALIZED_KEYWORDS = {
 
 
 def cosine_similarity(vec_a, vec_b):
-    dot = sum(a * b for a, b in zip(vec_a, vec_b))
-    norm_a = sum(x * x for x in vec_a) ** 0.5
-    norm_b = sum(x * x for x in vec_b) ** 0.5
+    zipped = [(a, b) for a, b in zip(vec_a, vec_b) if a is not None and b is not None]
+    if not zipped:
+        return 0.0
+    dot = sum(a * b for a, b in zipped)
+    norm_a = sum(a * a for a, _ in zipped) ** 0.5
+    norm_b = sum(b * b for _, b in zipped) ** 0.5
     if norm_a == 0 or norm_b == 0:
         return 0.0
     return dot / (norm_a * norm_b)
@@ -80,15 +110,26 @@ def cosine_similarity(vec_a, vec_b):
 def column_stats(items, columns):
     stats = {}
     for col in columns:
-        values = [float(item.get(col, 0.0)) for item in items]
-        stats[col] = (min(values), max(values)) if values else (0.0, 1.0)
+        values = [float(item[col]) for item in items if item.get(col) is not None]
+        if not values:
+            stats[col] = (0.0, 1.0)
+        else:
+            # Use 5th and 95th percentiles instead of absolute min/max to avoid outlier influence
+            stats[col] = (
+                float(np.percentile(values, 5)),
+                float(np.percentile(values, 95)),
+            )
     return stats
 
 
 def minmax(value, min_val, max_val):
+    if value is None:
+        return None
     if max_val == min_val:
         return 0.0
-    return (value - min_val) / (max_val - min_val)
+    # Clip the value to our robust bounds so outliers don't break the [0, 1] range
+    clipped_value = max(min_val, min(value, max_val))
+    return (clipped_value - min_val) / (max_val - min_val)
 
 
 def normalize_score_map(score_map):
@@ -101,7 +142,7 @@ def normalize_score_map(score_map):
 
 
 def track_key(track_name, artist_name):
-    return (track_name.strip().lower(), artist_name.strip().lower())
+    return f"{track_name.strip().lower()}|||{artist_name.strip().lower()}"
 
 
 def get_feature_weight_values(prefs):
@@ -144,15 +185,36 @@ def duration_label(duration_ms):
     return f"{minutes}:{seconds:02d}"
 
 
-def decorate_song(song, score):
+def _extract_track_id(song):
+    url = song.get("spotify_url", "") or ""
+    if "/track/" in url:
+        return url.split("/track/")[-1].split("?")[0].strip()
+    return ""
+
+
+def decorate_song(song, score, behavioral_fit=None, match_pct=None):
+    track_id = _extract_track_id(song)
+    if match_pct is not None:
+        display_match = max(1, min(99, int(round(match_pct))))
+    else:
+        display_match = max(1, min(99, int(score * 100)))
+
     return {
         **song,
         "raw_score": score,
-        "match": max(60, min(99, int(score * 100))),
+        "match": display_match,
+        "behavioral_fit": (
+            int(round(behavioral_fit * 100)) if behavioral_fit is not None else None
+        ),
         "color": GENRE_COLORS.get(song["genre"], DEFAULT_COLOR),
-        "tempo_bpm": int(round(float(song.get("tempo", 0.0)))),
-        "duration_label": duration_label(song.get("duration_ms", 0)),
-        "loudness_db": round(float(song.get("loudness", 0.0)), 1),
-        "speechiness_pct": int(round(float(song.get("speechiness", 0.0)) * 100)),
-        "liveness_pct": int(round(float(song.get("liveness", 0.0)) * 100)),
+        "tempo_bpm": int(round(float(song.get("tempo") or 0.0))),
+        "duration_label": duration_label(song.get("duration_ms") or 0),
+        "loudness_db": round(float(song.get("loudness") or 0.0), 1),
+        "speechiness_pct": int(round(float(song.get("speechiness") or 0.0) * 100)),
+        "liveness_pct": int(round(float(song.get("liveness") or 0.0) * 100)),
+        "spotify_embed_url": (
+            f"https://open.spotify.com/embed/track/{track_id}?utm_source=generator&theme=0"
+            if track_id
+            else ""
+        ),
     }

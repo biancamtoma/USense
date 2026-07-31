@@ -11,7 +11,6 @@ from services.recommender_shared import (
     get_feature_weight_values,
 )
 
-
 __all__ = [
     "COMPARISON_FEATURES",
     "FEATURE_WEIGHT_DEFAULTS",

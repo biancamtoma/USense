@@ -1,52 +1,14 @@
-{% extends "base.html" %}
-{% block body %}
+{% extends "base.html" %} {% block body %}
 <style>
   @keyframes float-icon {
-
     0%,
     100% {
       transform: translateY(0);
     }
 
     50% {
-      transform: translateY(-6px);
+      transform: translateY(-4px);
     }
-  }
-
-  @keyframes pulse-glow {
-
-    0%,
-    100% {
-      box-shadow: 0 0 0 0 rgba(40, 144, 226, 0.25);
-    }
-
-    50% {
-      box-shadow: 0 0 20px 4px rgba(40, 144, 226, 0.18);
-    }
-  }
-
-  @keyframes slide-up {
-    from {
-      opacity: 0;
-      transform: translateY(18px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .feature-card {
-    animation: slide-up 600ms ease-out both;
-  }
-
-  .feature-card:nth-child(1) {
-    animation-delay: 250ms;
-  }
-
-  .feature-card:nth-child(2) {
-    animation-delay: 400ms;
   }
 
   .feature-card:nth-child(3) {
@@ -83,144 +45,286 @@
 </style>
 
 <main
-  class="mx-auto flex min-h-[calc(100vh-84px)] w-full max-w-6xl items-start px-4 py-6 md:items-center md:px-6 md:py-10">
+  class="mx-auto flex min-h-[calc(100vh-84px)] w-full max-w-6xl items-start px-4 py-6 md:items-center md:px-6 md:py-10"
+>
   <div class="grid w-full items-stretch gap-6 md:grid-cols-2">
-
     <!-- LEFT: Auth form with clear purpose -->
-    <section class="rise rounded-3xl border border-ink/10 bg-white/80 p-6 shadow-float backdrop-blur md:p-10">
-      <p class="mb-3 font-display text-xs uppercase tracking-[0.26em] text-tide">AI-powered music taste platform</p>
-      <h2 class="font-display text-4xl tracking-tight text-ink md:text-5xl">Your music,<br><span
-          class="bg-gradient-to-r from-deep via-tide to-amber bg-clip-text text-transparent">understood.</span></h2>
-      <p class="mt-4 text-sm leading-relaxed text-ink/70">USense learns what makes your ears light up — then finds
-        songs, people, and communities that match your unique sound.</p>
+    <section
+      class="rise rounded-3xl border border-ink/10 bg-white/80 p-6 shadow-float backdrop-blur md:p-10"
+    >
+      <p
+        class="mb-3 font-display text-xs uppercase tracking-[0.26em] text-tide"
+      >
+        Music taste platform
+      </p>
+      <h2 class="font-display text-4xl tracking-tight text-ink md:text-5xl">
+        Your music,<br /><span
+          class="bg-gradient-to-r from-deep via-tide to-amber bg-clip-text text-transparent"
+          >understood.</span
+        >
+      </h2>
+      <p class="mt-4 text-sm leading-relaxed text-ink/70">
+        USense learns what makes your ears light up — then finds songs, people,
+        and communities that match your unique sound.
+      </p>
 
       <!-- Quick value props under tagline -->
       <div class="mt-5 flex gap-3">
-        <div class="flex items-center gap-1.5 rounded-full border border-tide/20 bg-tide/5 px-3 py-1.5">
-          <svg viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5 text-tide">
+        <div
+          class="flex items-center gap-1.5 rounded-full border border-tide/20 bg-tide/5 px-3 py-1.5"
+        >
+          <svg
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            class="h-3.5 w-3.5 text-tide"
+          >
             <path
-              d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a5.5 5.5 0 01-3.952 0l1.738-5.42-3.738-1.79V17a1 1 0 11-2 0V5.72L5.048 7.51l1.738 5.42a5.5 5.5 0 01-3.952 0l1.738-5.42-1.233-.617a1 1 0 11.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" />
+              d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a5.5 5.5 0 01-3.952 0l1.738-5.42-3.738-1.79V17a1 1 0 11-2 0V5.72L5.048 7.51l1.738 5.42a5.5 5.5 0 01-3.952 0l1.738-5.42-1.233-.617a1 1 0 11.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z"
+            />
           </svg>
-          <span class="text-[10px] font-bold uppercase tracking-wide text-tide">Smart recs</span>
+          <span class="text-[10px] font-bold uppercase tracking-wide text-tide"
+            >Smart recs</span
+          >
         </div>
-        <div class="flex items-center gap-1.5 rounded-full border border-amber/25 bg-amber/5 px-3 py-1.5">
-          <svg viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5 text-amber">
+        <div
+          class="flex items-center gap-1.5 rounded-full border border-amber/25 bg-amber/5 px-3 py-1.5"
+        >
+          <svg
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            class="h-3.5 w-3.5 text-amber"
+          >
             <path
-              d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.97 5.97 0 00-.75-2.9A3.005 3.005 0 0119 17v1h-3zM4.75 14.1A5.97 5.97 0 004 17v1H1v-1a3 3 0 013.75-2.9z" />
+              d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.97 5.97 0 00-.75-2.9A3.005 3.005 0 0119 17v1h-3zM4.75 14.1A5.97 5.97 0 004 17v1H1v-1a3 3 0 013.75-2.9z"
+            />
           </svg>
-          <span class="text-[10px] font-bold uppercase tracking-wide text-amber">Social</span>
+          <span class="text-[10px] font-bold uppercase tracking-wide text-amber"
+            >Social</span
+          >
         </div>
-        <div class="flex items-center gap-1.5 rounded-full border border-deep/20 bg-deep/5 px-3 py-1.5">
-          <svg viewBox="0 0 20 20" fill="currentColor" class="h-3.5 w-3.5 text-deep">
-            <path fill-rule="evenodd"
+        <div
+          class="flex items-center gap-1.5 rounded-full border border-deep/20 bg-deep/5 px-3 py-1.5"
+        >
+          <svg
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            class="h-3.5 w-3.5 text-deep"
+          >
+            <path
+              fill-rule="evenodd"
               d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
-              clip-rule="evenodd" />
+              clip-rule="evenodd"
+            />
           </svg>
-          <span class="text-[10px] font-bold uppercase tracking-wide text-deep">Adaptive</span>
+          <span class="text-[10px] font-bold uppercase tracking-wide text-deep"
+            >Adaptive</span
+          >
         </div>
       </div>
 
       {% if error %}
-      <p class="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ error }}</p>
-      {% endif %}
-      {% if success %}
-      <p class="mt-5 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">{{ success }}</p>
+      <p
+        class="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+      >
+        {{ error }}
+      </p>
+      {% endif %} {% if success %}
+      <p
+        class="mt-5 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
+      >
+        {{ success }}
+      </p>
       {% endif %}
 
+      <!-- Guided demo path: two ways to test -->
+      <div class="mt-4 rounded-2xl border border-ink/10 bg-ink/[0.02] p-4">
+        <p class="text-xs font-bold text-ink/70">
+          Try USense Demo Sandbox (No Login Required)
+        </p>
+        <p class="mt-1 text-[11px] text-ink/55">
+          Explore search sliders or instantly unlock the full team supervisor
+          dashboard with mock campaigns.
+        </p>
+        <div class="mt-3 flex gap-3">
+          <a
+            href="{{ url_for('demo') }}"
+            class="flex-1 rounded-xl border border-tide/40 bg-gradient-to-r from-tide/20 to-tide/10 px-2 py-2 text-center text-[10px] sm:text-xs font-bold uppercase tracking-wide text-tide transition hover:from-tide/30 hover:to-tide/20"
+            >Guided Audio Demo</a
+          >
+          <a
+            href="{{ url_for('demo_sandbox') }}"
+            class="flex-1 rounded-xl border border-amber/40 bg-gradient-to-r from-amber/25 to-amber/10 px-2 py-2 text-center text-[10px] sm:text-xs font-extrabold uppercase tracking-wide text-[#b45309] transition hover:from-amber/35 hover:to-amber/25"
+            >Launch Live Sandbox</a
+          >
+        </div>
+      </div>
       <form id="auth-form" method="post" class="mt-5 space-y-3">
         <div>
-          <label for="email" class="mb-1 block text-left text-sm font-semibold text-ink/80">Email</label>
-          <input id="email" type="email" name="email" placeholder="Enter your email"
-            pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$" value="{{ email_value or '' }}"
+          <label
+            for="email"
+            class="mb-1 block text-left text-sm font-semibold text-ink/80"
+            >Email</label
+          >
+          <input
+            id="email"
+            type="email"
+            name="email"
+            placeholder="Enter your email"
+            value="{{ email_value or '' }}"
             class="w-full rounded-xl border border-ink/20 bg-white px-4 py-3 text-base text-ink outline-none transition focus:border-tide focus:ring-4 focus:ring-tide/20"
-            required />
-          <p id="email-live-warning"
-            class="mt-2 hidden rounded-lg border border-amber/30 bg-amber/15 px-3 py-2 text-xs text-[#7a5a00]">
+            required
+          />
+          <p
+            id="email-live-warning"
+            class="mt-2 hidden rounded-lg border border-amber/30 bg-amber/15 px-3 py-2 text-xs text-[#7a5a00]"
+          >
             Warning: enter a valid email address (example: name@email.com).
           </p>
           {% if register_email_warning %}
-          <p class="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+          <p
+            class="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
+          >
             {{ register_email_warning }}
           </p>
           {% endif %}
         </div>
         <div>
-          <label for="password" class="mb-1 block text-left text-sm font-semibold text-ink/80">Password</label>
-          <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="off"
+          <label
+            for="password"
+            class="mb-1 block text-left text-sm font-semibold text-ink/80"
+            >Password</label
+          >
+          <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Enter your password"
+            autocomplete="off"
             class="w-full rounded-xl border border-ink/20 bg-white px-4 py-3 text-base text-ink outline-none transition focus:border-tide focus:ring-4 focus:ring-tide/20"
-            required />
+            required
+          />
         </div>
         <div class="pt-1">
-          <button type="submit" formaction="{{ url_for('login') }}"
-            class="w-full rounded-xl border border-white/60 bg-gradient-to-r from-deep to-tide px-5 py-3.5 text-sm font-extrabold uppercase tracking-[0.14em] text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)] shadow-xl shadow-tide/40 ring-2 ring-deep/25 transition hover:from-[#1859a5] hover:to-deep hover:-translate-y-0.5">Sign
-            In</button>
-          <button type="submit" formaction="{{ url_for('register') }}"
-            class="mt-3 w-full rounded-xl border border-amber/40 bg-gradient-to-r from-sun to-amber px-5 py-3.5 text-sm font-bold uppercase tracking-[0.14em] text-ink shadow-md shadow-amber/30 transition hover:translate-y-[-1px] hover:from-[#f8df63] hover:to-[#d7b428]">Create
-            Free Account</button>
+          <button
+            type="submit"
+            formaction="{{ url_for('login') }}"
+            class="w-full rounded-xl border border-white/60 bg-gradient-to-r from-deep to-tide px-5 py-3.5 text-sm font-extrabold uppercase tracking-[0.14em] text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)] shadow-xl shadow-tide/40 ring-2 ring-deep/25 transition hover:from-[#1859a5] hover:to-deep hover:-translate-y-0.5"
+          >
+            Sign In
+          </button>
+          <button
+            type="submit"
+            formaction="{{ url_for('register') }}"
+            class="mt-3 w-full rounded-xl border border-amber/40 bg-gradient-to-r from-sun to-amber px-5 py-3.5 text-sm font-bold uppercase tracking-[0.14em] text-ink shadow-md shadow-amber/30 transition hover:translate-y-[-1px] hover:from-[#f8df63] hover:to-[#d7b428]"
+          >
+            Create Free Account
+          </button>
         </div>
       </form>
-      <p class="mt-4 text-center text-[11px] text-ink/40">Takes 10 seconds. No credit card. Start discovering.</p>
+      <p class="mt-4 text-center text-[11px] text-ink/40">
+        Takes 10 seconds. No credit card. Start discovering.
+      </p>
     </section>
 
     <!-- RIGHT: Feature showcase with compelling narrative -->
     <aside
       class="rise hidden flex-col rounded-3xl border border-tide/20 bg-gradient-to-br from-[#0a1e3f] via-[#163e7a] to-[#2890e2] p-8 text-left text-white shadow-float md:flex lg:p-10"
-      style="animation-delay:120ms">
-
+      style="animation-delay: 120ms"
+    >
       <!-- Logo + headline -->
       <div class="flex items-center gap-4">
-        <img src="{{ url_for('static', filename='usense-logo.svg') }}" alt="USense logo"
-          class="icon-float h-16 w-16 rounded-2xl border border-white/20 object-cover shadow-xl shadow-black/30">
+        <img
+          src="{{ url_for('static', filename='usense-logo.svg') }}"
+          alt="USense logo"
+          class="icon-float h-16 w-16 rounded-2xl border border-white/20 object-cover shadow-xl shadow-black/30"
+        />
         <div>
-          <p class="font-display text-[11px] uppercase tracking-[0.26em] text-white/50">Why join</p>
-          <h3 class="font-display text-2xl font-bold leading-tight lg:text-3xl">Decode your<br>musical DNA</h3>
+          <p
+            class="font-display text-[11px] uppercase tracking-[0.26em] text-white/50"
+          >
+            Why join
+          </p>
+          <h3 class="font-display text-2xl font-bold leading-tight lg:text-3xl">
+            Decode the<br />musical DNA of your audience
+          </h3>
         </div>
       </div>
 
       <p class="mt-5 text-sm leading-relaxed text-white/75">
-        Most apps give you hits. USense gives you <strong class="text-white">understanding</strong> — a living profile
-        of <em>how</em> you hear music, powered by AI that actually learns your taste.
+        Most apps give you hits. USense gives you
+        <strong class="text-white">understanding</strong> — a living profile of
+        <em>how</em> your audience hears music, powered by AI that actually
+        learns the desired taste.
       </p>
 
       <!-- Feature grid -->
       <div class="mt-6 grid grid-cols-2 gap-3">
-
         <div
-          class="feature-card rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm transition hover:bg-white/[0.12]">
+          class="feature-card rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm transition hover:bg-white/[0.12]"
+        >
           <div
-            class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#56b7ef] to-tide shadow-md">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" class="h-4.5 w-4.5">
+            class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#56b7ef] to-tide shadow-md"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              stroke-width="2"
+              class="h-4.5 w-4.5"
+            >
               <path d="M9 19V6l12-3v13" />
               <circle cx="6" cy="19" r="3" fill="white" />
               <circle cx="18" cy="16" r="3" fill="white" />
             </svg>
           </div>
-          <p class="text-xs font-bold text-white">Hybrid AI Recs</p>
-          <p class="mt-1 text-[10px] leading-relaxed text-white/55">Content + collaborative filtering finds songs that
-            match <em>your</em> sound signature.</p>
+          <p class="text-xs font-bold text-white">Hybrid Recommendations</p>
+          <p class="mt-1 text-[10px] leading-relaxed text-white/55">
+            Find what you're looking for and see what other teams are doing
+            match <em>your</em> sound signature.
+          </p>
         </div>
 
         <div
-          class="feature-card rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm transition hover:bg-white/[0.12]">
+          class="feature-card rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm transition hover:bg-white/[0.12]"
+        >
           <div
-            class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-sun to-amber shadow-md">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#1d2433" stroke-width="2" class="h-4.5 w-4.5">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
+            class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-sun to-amber shadow-md"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#1d2433"
+              stroke-width="2"
+              class="h-4.5 w-4.5"
+            >
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"
+              />
               <path d="M8 14s1.5 2 4 2 4-2 4-2" />
               <circle cx="9" cy="9" r="1" fill="#1d2433" />
               <circle cx="15" cy="9" r="1" fill="#1d2433" />
             </svg>
           </div>
           <p class="text-xs font-bold text-white">Taste Profile</p>
-          <p class="mt-1 text-[10px] leading-relaxed text-white/55">Dial in danceability, energy, valence, acousticness
-            & more with precision sliders.</p>
+          <p class="mt-1 text-[10px] leading-relaxed text-white/55">
+            Dial in danceability, energy, valence, acousticness & more with
+            precision sliders.
+          </p>
         </div>
 
         <div
-          class="feature-card rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm transition hover:bg-white/[0.12]">
+          class="feature-card rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm transition hover:bg-white/[0.12]"
+        >
           <div
-            class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#34d399] to-[#059669] shadow-md">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" class="h-4.5 w-4.5">
+            class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#34d399] to-[#059669] shadow-md"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              stroke-width="2"
+              class="h-4.5 w-4.5"
+            >
               <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
               <circle cx="9" cy="7" r="4" />
               <path d="M23 21v-2a4 4 0 00-3-3.87" />
@@ -228,74 +332,117 @@
             </svg>
           </div>
           <p class="text-xs font-bold text-white">Social Connections</p>
-          <p class="mt-1 text-[10px] leading-relaxed text-white/55">Add friends, see taste overlap, and discover people
-            who hear the world like you.</p>
+          <p class="mt-1 text-[10px] leading-relaxed text-white/55">
+            Add collaborators, see taste overlap, and discover people who hear
+            the world like you.
+          </p>
         </div>
 
         <div
-          class="feature-card rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm transition hover:bg-white/[0.12]">
+          class="feature-card rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm transition hover:bg-white/[0.12]"
+        >
           <div
-            class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#7c3aed] shadow-md">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" class="h-4.5 w-4.5">
-              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+            class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#7c3aed] shadow-md"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              stroke-width="2"
+              class="h-4.5 w-4.5"
+            >
+              <path
+                d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
+              />
             </svg>
           </div>
           <p class="text-xs font-bold text-white">Chat & Share</p>
-          <p class="mt-1 text-[10px] leading-relaxed text-white/55">Message friends and share tracks directly on the
-            platform.</p>
+          <p class="mt-1 text-[10px] leading-relaxed text-white/55">
+            Message collaborators and share tracks directly on the platform.
+          </p>
         </div>
 
         <div
-          class="feature-card rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm transition hover:bg-white/[0.12]">
+          class="feature-card rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm transition hover:bg-white/[0.12]"
+        >
           <div
-            class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#f472b6] to-[#db2777] shadow-md">
+            class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#f472b6] to-[#db2777] shadow-md"
+          >
             <svg viewBox="0 0 24 24" fill="white" class="h-4.5 w-4.5">
               <path
-                d="M12 21l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.18L12 21z" />
+                d="M12 21l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.18L12 21z"
+              />
             </svg>
           </div>
           <p class="text-xs font-bold text-white">Favorites Library</p>
-          <p class="mt-1 text-[10px] leading-relaxed text-white/55">Save songs and train the AI — each save sharpens
-            future recommendations.</p>
+          <p class="mt-1 text-[10px] leading-relaxed text-white/55">
+            Save songs and train the AI — each save sharpens future
+            recommendations.
+          </p>
         </div>
 
         <div
-          class="feature-card rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm transition hover:bg-white/[0.12]">
+          class="feature-card rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm transition hover:bg-white/[0.12]"
+        >
           <div
-            class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#fb923c] to-[#ea580c] shadow-md">
-            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" class="h-4.5 w-4.5">
+            class="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#fb923c] to-[#ea580c] shadow-md"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              stroke-width="2"
+              class="h-4.5 w-4.5"
+            >
               <circle cx="12" cy="12" r="10" />
-              <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+              <path
+                d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"
+              />
             </svg>
           </div>
           <p class="text-xs font-bold text-white">Community Picks</p>
-          <p class="mt-1 text-[10px] leading-relaxed text-white/55">Collaborative recs from users and friends whose
-            tastes overlap with yours.</p>
+          <p class="mt-1 text-[10px] leading-relaxed text-white/55">
+            Collaborative recs from users and collaborators whose tastes overlap
+            with yours.
+          </p>
         </div>
-
       </div>
 
       <!-- Bottom stat bar -->
       <div class="mt-auto pt-6">
         <div
-          class="stat-glow flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.08] px-5 py-3">
+          class="stat-glow flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.08] px-5 py-3"
+        >
           <div class="text-center">
             <p class="font-display text-lg font-bold text-sun">100+</p>
-            <p class="text-[9px] font-semibold uppercase tracking-wide text-white/45">Genres</p>
+            <p
+              class="text-[9px] font-semibold uppercase tracking-wide text-white/45"
+            >
+              Genres
+            </p>
           </div>
           <div class="h-6 w-px bg-white/15"></div>
           <div class="text-center">
             <p class="font-display text-lg font-bold text-sun">5</p>
-            <p class="text-[9px] font-semibold uppercase tracking-wide text-white/45">Audio axes</p>
+            <p
+              class="text-[9px] font-semibold uppercase tracking-wide text-white/45"
+            >
+              Audio axes
+            </p>
           </div>
           <div class="h-6 w-px bg-white/15"></div>
           <div class="text-center">
-            <p class="font-display text-lg font-bold text-sun">3-layer</p>
-            <p class="text-[9px] font-semibold uppercase tracking-wide text-white/45">Hybrid AI</p>
+            <p class="font-display text-lg font-bold text-sun">
+              10k licensed songs
+            </p>
+            <p
+              class="text-[9px] font-semibold uppercase tracking-wide text-white/45"
+            >
+              Music library
+            </p>
           </div>
         </div>
       </div>
-
     </aside>
   </div>
 </main>

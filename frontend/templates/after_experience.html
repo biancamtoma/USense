@@ -1,0 +1,389 @@
+{% extends "base.html" %} {% block body %}
+<div
+  class="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 text-white flex flex-col font-sans relative overflow-hidden"
+>
+  <!-- Glowing Background Orbs -->
+  <div
+    class="absolute w-[500px] h-[500px] rounded-full bg-tide/5 -top-48 -left-48 blur-[100px] pointer-events-none"
+  ></div>
+  <div
+    class="absolute w-[600px] h-[600px] rounded-full bg-deep/5 -bottom-64 -right-64 blur-[120px] pointer-events-none"
+  ></div>
+
+  <!-- Header Section -->
+  <header
+    class="border-b border-white/10 bg-slate-900/50 backdrop-blur-md px-8 py-5 flex items-center justify-between sticky top-0 z-50"
+  >
+    <div class="flex items-center gap-3">
+      <span class="text-3xl animate-pulse">📁</span>
+      <div>
+        <div class="flex items-center gap-2">
+          <span
+            class="text-[9px] font-black uppercase tracking-[0.2em] bg-white/10 text-white/80 px-2 py-0.5 rounded-full"
+            >Session Completed</span
+          >
+          <span
+            class="text-[9px] font-black uppercase tracking-[0.2em] bg-tide/20 text-tide px-2 py-0.5 rounded-full"
+            >kNN Synced</span
+          >
+        </div>
+        <h1 class="text-xl font-bold tracking-tight text-white mt-1">
+          {{ room.name }} - Debate Concluded
+        </h1>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <!-- Re-open / Resume Debate Form -->
+      <form id="resume-debate-form" class="inline-block">
+        <button
+          type="button"
+          id="resume-debate-btn"
+          data-room-id="{{ room.id }}"
+          class="rounded-xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 px-4 py-2 text-[10px] font-extrabold uppercase tracking-wider transition text-white/70 hover:text-white"
+        >
+          ↩️ Re-open Campaign
+        </button>
+      </form>
+      <a
+        href="{{ url_for('dashboard') }}"
+        class="rounded-xl bg-gradient-to-r from-tide to-deep hover:from-deep hover:to-tide text-white px-5 py-2.5 text-[10px] font-extrabold uppercase tracking-wider shadow-lg shadow-tide/20 transition transform hover:scale-[1.01]"
+      >
+        🏠 Back to Dashboard
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Body Content Grid -->
+  <main
+    class="flex-1 max-w-7xl w-full mx-auto px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8"
+  >
+    <!-- ═══════ Left Column: Campaign Outcomes Summary (5 cols) ═══════ -->
+    <section class="lg:col-span-5 space-y-6 flex flex-col">
+      <!-- Debate Statistics Card -->
+      <div
+        class="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md relative overflow-hidden shadow-xl"
+      >
+        <div
+          class="absolute -right-16 -top-16 w-36 h-36 rounded-full bg-tide/5 blur-2xl"
+        ></div>
+        <h3 class="text-xs font-black uppercase tracking-wider text-tide mb-4">
+          📈 Campaign Debate Summary
+        </h3>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div
+            class="bg-white/5 border border-white/5 p-4 rounded-2xl text-center"
+          >
+            <span
+              class="text-3xl font-black text-white leading-none block mb-1"
+            >
+              {{ approved_tracks|length }}
+            </span>
+            <span
+              class="text-[9px] font-bold text-white/40 uppercase tracking-wider"
+              >Approved Tracks</span
+            >
+          </div>
+          <div
+            class="bg-white/5 border border-white/5 p-4 rounded-2xl text-center"
+          >
+            <span class="text-3xl font-black text-tide leading-none block mb-1">
+              {{ room_preset.get('label', 'Brief') }}
+            </span>
+            <span
+              class="text-[9px] font-bold text-white/40 uppercase tracking-wider"
+              >Campaign Presets</span
+            >
+          </div>
+        </div>
+
+        <div class="border-t border-white/10 mt-5 pt-4 space-y-3">
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-white/50">Target Vibe:</span>
+            <span
+              class="font-bold text-white uppercase tracking-wider text-[10px] px-2 py-0.5 rounded bg-white/10"
+              >{{ room.mood_key }}</span
+            >
+          </div>
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-white/50">Intensity Vibe:</span>
+            <span class="font-bold text-white"
+              >{{ (room_preset.get('pref_energy', 0.5) * 100)|int }}%
+              energy</span
+            >
+          </div>
+          <div class="flex justify-between items-center text-xs">
+            <span class="text-white/50">Groove Target:</span>
+            <span class="font-bold text-white"
+              >{{ (room_preset.get('pref_danceability', 0.5) * 100)|int }}%
+              dance</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Approved Track Pool List -->
+      <div
+        class="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md shadow-xl flex-1 flex flex-col"
+      >
+        <h3
+          class="text-xs font-black uppercase tracking-wider text-emerald-400 mb-4 flex items-center gap-1.5"
+        >
+          <span>✅</span> Approved Campaign Soundtracks
+        </h3>
+
+        <div class="flex-1 overflow-y-auto space-y-3 max-h-[420px] pr-1">
+          {% if approved_tracks %} {% for song in approved_tracks %}
+          <div
+            class="flex flex-col gap-3 bg-white/5 p-4 rounded-2xl border border-white/5 transition hover:bg-white/10"
+          >
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3 min-w-0">
+                <div
+                  class="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center flex-shrink-0 text-emerald-400"
+                >
+                  ✓
+                </div>
+                <div class="min-w-0">
+                  <h4 class="text-xs font-bold text-white truncate leading-tight">
+                    {{ song.trackName }}
+                  </h4>
+                  <p
+                    class="text-[10px] text-white/50 truncate leading-tight mt-0.5"
+                  >
+                    {{ song.artistName }}
+                  </p>
+                </div>
+              </div>
+              <span
+                class="text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-wider shrink-0"
+              >
+                {{ song.genre }}
+              </span>
+            </div>
+
+            {% if song.spotify_embed_url %}
+            <div class="w-full rounded-xl overflow-hidden bg-black/20 shrink-0">
+              <iframe
+                src="{{ song.spotify_embed_url }}"
+                width="100%"
+                height="80"
+                frameborder="0"
+                allow="autoplay; clipboard-write; encrypted-media"
+                style="border-radius: 12px"
+                loading="lazy"
+              ></iframe>
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %} {% else %}
+          <div
+            class="h-full flex items-center justify-center py-10 text-center text-white/30 italic text-xs"
+          >
+            No tracks were finalized as "Approved" during this session.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════ Right Column: kNN Recommendations "Maybe You Also Prefer" (7 cols) ═══════ -->
+    <section
+      class="lg:col-span-7 rounded-3xl border border-white/10 bg-white/5 p-7 backdrop-blur-md shadow-xl relative overflow-hidden flex flex-col"
+    >
+      <div
+        class="absolute -right-24 -bottom-24 w-60 h-60 rounded-full bg-tide/5 blur-3xl pointer-events-none"
+      ></div>
+
+      <div
+        class="flex items-start justify-between gap-3 border-b border-white/10 pb-5 mb-5 shrink-0"
+      >
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xl">🧠</span>
+            <h2 class="text-xs font-black uppercase tracking-wider text-tide">
+              kNN Resonance Engine After-Experience
+            </h2>
+          </div>
+          <h3 class="text-lg font-bold text-white mt-1.5">
+            Maybe you would also prefer...
+          </h3>
+          <p class="text-xs text-white/50 mt-1">
+            Based on the reaction triggers, approves, and emoji feedback logged
+            during your team's live debates, the kNN algorithm generated these
+            highly congruent matches.
+          </p>
+        </div>
+      </div>
+
+      <!-- Recommendation Grid -->
+      <div class="flex-1 overflow-y-auto space-y-4 pr-1 min-h-[500px]">
+        {% if recommendations %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {% for song in recommendations %}
+          <div
+            class="rounded-2xl bg-white/5 border border-white/5 p-4 flex flex-col justify-between gap-4 transition hover:bg-white/10 hover:border-white/10 relative overflow-hidden group"
+          >
+            <!-- Glow corner on hover -->
+            <div
+              class="absolute -right-12 -top-12 w-24 h-24 rounded-full transition duration-500 bg-tide/5 blur-xl group-hover:bg-tide/15"
+            ></div>
+
+            <div class="space-y-3">
+              <!-- Spotify embed or generic card -->
+              {% if song.spotify_embed_url %}
+              <div
+                class="w-full rounded-xl overflow-hidden bg-black/20 shrink-0"
+              >
+                <iframe
+                  src="{{ song.spotify_embed_url }}"
+                  width="100%"
+                  height="80"
+                  frameborder="0"
+                  allow="autoplay; clipboard-write; encrypted-media"
+                  style="border-radius: 12px"
+                  loading="lazy"
+                ></iframe>
+              </div>
+              {% else %}
+              <div
+                class="w-full h-20 rounded-xl bg-gradient-to-br from-white/5 to-indigo-900/10 flex items-center justify-center text-white/20"
+              >
+                <span class="text-2xl">🎵</span>
+              </div>
+              {% endif %}
+
+              <!-- Track Details -->
+              <div class="min-w-0">
+                <h4 class="text-sm font-bold text-white truncate leading-tight">
+                  {{ song.trackName }}
+                </h4>
+                <p class="text-xs text-white/50 truncate leading-tight mt-0.5">
+                  {{ song.artistName }}
+                </p>
+
+                <div class="flex flex-wrap gap-1.5 mt-2.5">
+                  <span
+                    class="text-[9px] px-2 py-0.5 rounded-full bg-white/15 text-white font-bold uppercase tracking-wider shrink-0"
+                    style="color: {{ song.color }}"
+                    >{{ song.genre }}</span
+                  >
+                  <span
+                    class="text-[9px] px-2 py-0.5 rounded-full bg-tide/10 text-tide font-black uppercase tracking-wider shrink-0"
+                    title="Behavioral fit calculated via kNN algorithm"
+                    >🧠 {{ song.behavioral_fit }}% Team Fit</span
+                  >
+                  <span
+                    class="text-[9px] px-2 py-0.5 rounded-full bg-white/5 text-white/40 font-bold tracking-wide shrink-0"
+                    >{{ song.tempo_bpm }} bpm</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Inline Favoriting Action button -->
+            <button
+              type="button"
+              class="fav-btn w-full rounded-xl border py-2 px-3 text-[10px] font-extrabold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 {% if song.is_favorite %} border-emerald-500 bg-emerald-500/20 text-emerald-400 {% else %} border-tide/30 hover:border-tide hover:bg-tide/10 text-tide bg-white/5 {% endif %}"
+              {%
+              if
+              song.is_favorite
+              %}disabled{%
+              endif
+              %}
+              data-track-name="{{ song.trackName }}"
+              data-artist-name="{{ song.artistName }}"
+              data-genre="{{ song.genre }}"
+              data-spotify-url="{{ song.spotify_url }}"
+              data-color="{{ song.color }}"
+              data-match="{{ song.match }}"
+            >
+              {% if song.is_favorite %} ✓ Added to Favorites {% else %} ⭐ Save
+              to Favorites {% endif %}
+            </button>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div
+          class="h-full flex items-center justify-center py-20 text-center text-white/30 italic text-xs"
+        >
+          No dynamic suggestions are available based on your behavioral
+          footprint.
+        </div>
+        {% endif %}
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    // 1. Asynchronous AJAX favoriting for recommended cards
+    const favButtons = document.querySelectorAll(".fav-btn");
+    favButtons.forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (btn.disabled) return;
+        btn.disabled = true;
+        btn.innerHTML = "Saving...";
+
+        const payload = {
+          track_name: btn.dataset.trackName,
+          artist_name: btn.dataset.artistName,
+          genre: btn.dataset.genre,
+          spotify_url: btn.dataset.spotifyUrl,
+          color: btn.dataset.color,
+          match_score: btn.dataset.match,
+          source_type: "knn",
+          source_label: "kNN After-Experience Suggestion",
+        };
+
+        try {
+          const resp = await fetch("/api/recommendations/favorites/add", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const data = await resp.json();
+          if (data.ok) {
+            btn.className =
+              "fav-btn w-full rounded-xl border border-emerald-500 bg-emerald-500/20 text-emerald-400 py-2 px-3 text-[10px] font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5";
+            btn.innerHTML = "✓ Added to Favorites";
+          } else {
+            btn.disabled = false;
+            btn.innerHTML = "⭐ Save to Favorites";
+            alert("Failed to save: " + (data.error || "Unknown error"));
+          }
+        } catch (err) {
+          btn.disabled = false;
+          btn.innerHTML = "⭐ Save to Favorites";
+          alert("Error connecting to server.");
+        }
+      });
+    });
+
+    // 2. Re-open / Resume debate handler
+    const resumeBtn = document.getElementById("resume-debate-btn");
+    if (resumeBtn) {
+      resumeBtn.addEventListener("click", async () => {
+        const roomId = resumeBtn.dataset.roomId;
+        try {
+          const resp = await fetch(`/room/${roomId}/toggle-ongoing`, {
+            method: "POST",
+          });
+          const data = await resp.json();
+          if (data.ok) {
+            // Debate is ongoing now, redirect back to campaign room
+            window.location.href = `/room/${roomId}`;
+          } else {
+            alert(data.error || "Failed to resume debate.");
+          }
+        } catch (err) {
+          alert("Error connecting to server.");
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}
