@@ -56,6 +56,8 @@ Campaign rooms support:
 
 This makes the platform useful for content teams, campaign planners, and creative discussions around music selection.
 
+---
+
 ## Analytic features included in the project
 
 #### 1. Russell's index and music positioning
