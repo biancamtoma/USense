@@ -56,33 +56,33 @@ Campaign rooms support:
 
 This makes the platform useful for content teams, campaign planners, and creative discussions around music selection.
 
-### Analytic features included in the project
+## Analytic features included in the project
 
-#### Russell's index and music positioning
+#### 1. Russell's index and music positioning
 The application includes work around Russell's emotional model, which helps position songs along dimensions such as valence and arousal. In practice, this supports a more structured view of how a track may fit a brand mood, campaign emotion, or audience response.
 
-#### Logistic regression-based modeling
+#### 2. Logistic regression-based modeling
 A logistic regression component is used as part of the recommendation and analysis pipeline. This provides a simple but interpretable baseline for modeling preference-related outcomes and helps connect musical features to likely user response patterns.
 
-#### k-NN (k-Nearest Neighbors)
+#### 3. k-NN (k-Nearest Neighbors)
 The project includes a k-nearest-neighbors approach for recommendation. This method looks for songs with similar feature profiles to the ones a user or campaign brief already favors. It is especially useful for finding tracks with similar sonic characteristics and for building a similarity-driven recommendation experience.
 
-#### k-Means clustering
+#### 4. k-Means clustering
 K-means clustering is used as part of the analytical flow to group songs by shared musical characteristics. This helps identify latent patterns in the music catalog and can support segmentation, exploratory analysis, and campaign fit evaluation.
 
-#### Popularity-based analysis
+#### 5. Popularity-based analysis
 The project also includes popularity-based logic and related work on popularity weighting. This helps balance highly popular tracks with niche or less obvious recommendations, allowing the system to support both mainstream and more targeted campaign needs.
 
-#### Gaussian noise application
+#### 6. Gaussian noise application
 Gaussian noise is applied in the experimental or modeling layer to simulate variability and robustness in the recommendation pipeline. This can be useful for testing sensitivity, exploring uncertainty, and avoiding overly rigid recommendations.
 
-#### Mnemonic and cue sheet support
+#### 7. Mnemonic and cue sheet support
 The system includes mnemonic-style cueing and cue-sheet concepts to help translate emotional or campaign-oriented ideas into recommendation targets. This is especially relevant for marketing teams that want to connect abstract creative briefs to concrete musical attributes.
 
-#### A/B testing support
+#### 8. A/B testing support
 A/B testing functionality is built into the campaign-room experience. This allows the system to compare different recommendation strategies, moods, or music selections in a structured way so teams can evaluate which direction performs better for a campaign.
 
-#### Emotional congruence
+#### 9. Emotional congruence
 A major design principle of the system is emotional congruence: aligning the recommended music with the emotional tone of a campaign, audience, or brand message. This is one of the most important concepts for marketing-oriented music selection because it helps ensure that the soundtrack supports the intended emotional effect rather than merely matching superficial genre preferences.
 
 
