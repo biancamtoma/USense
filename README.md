@@ -85,7 +85,6 @@ A/B testing functionality is built into the campaign-room experience. This allow
 #### 9. Emotional congruence
 A major design principle of the system is emotional congruence: aligning the recommended music with the emotional tone of a campaign, audience, or brand message. This is one of the most important concepts for marketing-oriented music selection because it helps ensure that the soundtrack supports the intended emotional effect rather than merely matching superficial genre preferences.
 
-
 ---
 ## Technology Stack
 
