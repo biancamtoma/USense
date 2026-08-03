@@ -159,6 +159,3 @@ Although the project contains a relatively lightweight implementation, it is str
 - campaign-specific targets.
 
 The code is organized into separate recommender services, making it easier to extend and improve over time.
-
----
-
